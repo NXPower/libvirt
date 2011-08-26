@@ -3022,11 +3022,21 @@ qemuMonitorSendKey(qemuMonitorPtr mon,
 
 int
 qemuMonitorScreendump(qemuMonitorPtr mon,
-                      const char *file)
+                      const char *file,
+                      const char *id)
 {
-    VIR_DEBUG("file=%s", file);
+    VIR_DEBUG("file=%s, id=%s", file, id);
 
     QEMU_CHECK_MONITOR(mon);
+
+    if (id) {
+        if (!mon->json) {
+            virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                           _("non-zero screen ID requires JSON monitor"));
+            return -1;
+        }
+        return qemuMonitorJSONScreendumpRH(mon, file, id);
+    }
 
     if (mon->json)
         return qemuMonitorJSONScreendump(mon, file);

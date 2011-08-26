@@ -4155,6 +4155,30 @@ int qemuMonitorJSONSendKey(qemuMonitorPtr mon,
     return ret;
 }
 
+int qemuMonitorJSONScreendumpRH(qemuMonitorPtr mon,
+                                const char *file,
+                                const char *id)
+{
+    int ret = -1;
+    virJSONValuePtr cmd, reply = NULL;
+
+    cmd = qemuMonitorJSONMakeCommand("__com.redhat_qxl_screendump",
+                                     "s:filename", file,
+                                     "s:id", id,
+                                     NULL);
+    if (!cmd)
+        return -1;
+
+    ret = qemuMonitorJSONCommand(mon, cmd, &reply);
+
+    if (ret == 0)
+        ret = qemuMonitorJSONCheckError(cmd, reply);
+
+    virJSONValueFree(cmd);
+    virJSONValueFree(reply);
+    return ret;
+}
+
 int qemuMonitorJSONScreendump(qemuMonitorPtr mon,
                               const char *file)
 {
