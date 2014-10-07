@@ -1464,6 +1464,7 @@ struct virQEMUCapsStringFlags virQEMUCapsCommands[] = {
     { "add-fd", QEMU_CAPS_ADD_FD },
     { "nbd-server-start", QEMU_CAPS_NBD_SERVER },
     { "change-backing-file", QEMU_CAPS_CHANGE_BACKING_FILE },
+    { "__com.redhat_change-backing-file", QEMU_CAPS_CHANGE_BACKING_FILE },
     { "rtc-reset-reinjection", QEMU_CAPS_RTC_RESET_REINJECTION },
     { "migrate-incoming", QEMU_CAPS_INCOMING_DEFER },
 };
