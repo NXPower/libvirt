@@ -6251,6 +6251,8 @@ qemuBuildCpuModelArgStr(virQEMUDriverPtr driver,
     virCPUCompareResult cmp;
     const char *preferred;
     virCapsPtr caps = NULL;
+    bool hle = false;
+    bool rtm = false;
     bool compareAgainstHost = ((def->virtType == VIR_DOMAIN_VIRT_KVM ||
                                 def->cpu->mode != VIR_CPU_MODE_CUSTOM) &&
                                def->cpu->mode != VIR_CPU_MODE_HOST_PASSTHROUGH);
@@ -6404,7 +6406,26 @@ qemuBuildCpuModelArgStr(virQEMUDriverPtr driver,
             else
                 sign = '+';
 
+            if (STREQ("rtm", featCpu->features[i].name))
+                rtm = true;
+            if (STREQ("hle", featCpu->features[i].name))
+                hle = true;
+
             virBufferAsprintf(buf, ",%c%s", sign, featCpu->features[i].name);
+        }
+
+        /* Some versions of qemu-kvm in RHEL provide Broadwell and Haswell CPU
+         * models which lack rtm and hle features when used with some machine
+         * types. Let's make sure Broadwell and Haswell will always have these
+         * features. But only if the features were not explicitly mentioned in
+         * the guest CPU definition.
+         */
+        if (STREQ_NULLABLE(featCpu->model, "Broadwell") ||
+            STREQ_NULLABLE(featCpu->model, "Haswell")) {
+            if (!rtm)
+                virBufferAddLit(buf, ",+rtm");
+            if (!hle)
+                virBufferAddLit(buf, ",+hle");
         }
     }
 
