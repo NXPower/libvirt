@@ -253,6 +253,41 @@ static int daemonForkIntoBackground(const char *argv0)
     return -1;
 }
 
+static void startSelfMonitor(void)
+{
+    pid_t pid;
+    int status;
+    char ebuf[1024];
+
+    while ((pid = fork()) > 0) {
+        while (waitpid(pid, &status, 0) < 0) {
+            if (errno != EINTR) {
+                VIR_ERROR(_("waitpid: %s"),
+                          virStrerror(errno, ebuf, sizeof(ebuf)));
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (WIFEXITED(status)) {
+            VIR_ERROR(_("Child %u exited with status %d"), pid,
+                      WEXITSTATUS(status));
+            if (WEXITSTATUS(status) == 0) {
+                _exit(EXIT_SUCCESS);
+            }
+        } else if (WIFSIGNALED(status)) {
+            int sig = WTERMSIG(status);
+            VIR_ERROR(_("Child %u exited with signal %d"), pid, sig);
+            if (sig == SIGTERM || sig == SIGKILL || sig == SIGQUIT) {
+                raise(sig);
+            }
+        }
+        sleep(1);
+    }
+    if (pid < 0) {
+        VIR_ERROR(_("Failed to fork: %s"),
+                  virStrerror(errno, ebuf, sizeof(ebuf)));
+        exit(EXIT_FAILURE);
+    }
+}
 
 static int
 daemonUnixSocketPaths(struct daemonConfig *config,
@@ -1379,6 +1414,9 @@ int main(int argc, char **argv) {
                       virStrerror(errno, ebuf, sizeof(ebuf)));
             goto cleanup;
         }
+
+        /* Launch the self-monitor. */
+        startSelfMonitor();
     }
 
     /* Ensure the rundir exists (on tmpfs on some systems) */
