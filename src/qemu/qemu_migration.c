@@ -1225,12 +1225,6 @@ qemuMigrationCookieXMLParse(qemuMigrationCookiePtr mig,
                        "%s", _("missing hostname element in migration data"));
         goto error;
     }
-    if (STREQ(mig->remoteHostname, mig->localHostname)) {
-        virReportError(VIR_ERR_INTERNAL_ERROR,
-                       _("Attempt to migrate guest to the same host %s"),
-                       mig->remoteHostname);
-        goto error;
-    }
 
     if (!(tmp = virXPathString("string(./hostuuid[1])", ctxt))) {
         virReportError(VIR_ERR_INTERNAL_ERROR,
@@ -1242,7 +1236,8 @@ qemuMigrationCookieXMLParse(qemuMigrationCookiePtr mig,
                        "%s", _("malformed hostuuid element in migration data"));
         goto error;
     }
-    if (memcmp(mig->remoteHostuuid, mig->localHostuuid, VIR_UUID_BUFLEN) == 0) {
+    if ((memcmp(mig->remoteHostuuid, mig->localHostuuid, VIR_UUID_BUFLEN) == 0)
+        && STREQ(mig->remoteHostname, mig->localHostname)) {
         virReportError(VIR_ERR_INTERNAL_ERROR,
                        _("Attempt to migrate guest to the same host %s"),
                        tmp);
