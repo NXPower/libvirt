@@ -3529,8 +3529,11 @@ virQEMUCapsInitQMPMonitor(virQEMUCapsPtr qemuCaps,
         virQEMUCapsSet(qemuCaps, QEMU_CAPS_CPU_AARCH64_OFF);
 
     /* vhost-user supports multi-queue from v2.4.0 onwards,
-     * but there is no way to query for that capability */
-    if (qemuCaps->version >= 2004000)
+     * but there is no way to query for that capability
+     *
+     * RHEL-only: The change was back-ported to earlier QEMU version,
+     * particularly 2.3, in BZ 1276100 */
+    if (qemuCaps->version >= 2003000)
         virQEMUCapsSet(qemuCaps, QEMU_CAPS_VHOSTUSER_MULTIQUEUE);
 
     /* Since 2.4.50 ARM virt machine supports gic-version option */
