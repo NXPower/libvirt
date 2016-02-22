@@ -4918,6 +4918,9 @@ qemuDomainMachineNeedsFDC(const virDomainDef *def)
             STRPREFIX(p, "2.2") ||
             STRPREFIX(p, "2.3"))
             return false;
+        if (STRPREFIX(p, "rhel7.0.0") ||
+            STRPREFIX(p, "rhel7.1.0"))
+            return false;
         return true;
     }
     return false;
