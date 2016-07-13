@@ -3877,7 +3877,8 @@ getAutoDumpPath(virQEMUDriverPtr driver,
                              timestr));
 
     virObjectUnref(cfg);
-    return domname;
+    VIR_FREE(domname);
+    return dumpfile;
 }
 
 static void
