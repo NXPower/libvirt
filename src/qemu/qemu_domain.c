@@ -1244,6 +1244,7 @@ qemuDomainObjPrivateFree(void *data)
     virDomainPCIAddressSetFree(priv->pciaddrs);
     virDomainCCWAddressSetFree(priv->ccwaddrs);
     virDomainVirtioSerialAddrSetFree(priv->vioserialaddrs);
+    virDomainUSBAddressSetFree(priv->usbaddrs);
     virDomainChrSourceDefFree(priv->monConfig);
     qemuDomainObjFreeJob(priv);
     VIR_FREE(priv->vcpupids);
