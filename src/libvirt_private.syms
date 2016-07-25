@@ -353,6 +353,8 @@ virDomainHubTypeToString;
 virDomainHypervTypeFromString;
 virDomainHypervTypeToString;
 virDomainInputDefFree;
+virDomainIOMMUModelTypeFromString;
+virDomainIOMMUModelTypeToString;
 virDomainIOThreadIDAdd;
 virDomainIOThreadIDDefFree;
 virDomainIOThreadIDDel;
