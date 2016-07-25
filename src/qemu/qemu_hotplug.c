@@ -2874,7 +2874,8 @@ qemuDomainRemoveDiskDevice(virQEMUDriverPtr driver,
     if (virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_OBJECT_SECRET) &&
         qemuDomainSecretDiskCapable(disk->src)) {
 
-        if (!(objAlias = qemuDomainGetSecretAESAlias(disk->info.alias))) {
+        if (!(objAlias =
+              qemuDomainGetSecretAESAlias(disk->info.alias, false))) {
             VIR_FREE(drivestr);
             return -1;
         }
