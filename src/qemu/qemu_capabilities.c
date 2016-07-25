@@ -337,6 +337,7 @@ VIR_ENUM_IMPL(virQEMUCaps, QEMU_CAPS_LAST,
               "drive-detect-zeroes",
 
               "tls-creds-x509", /* 230 */
+              "intel-iommu",
     );
 
 
@@ -1566,6 +1567,7 @@ struct virQEMUCapsStringFlags virQEMUCapsObjectTypes[] = {
     { "pxb", QEMU_CAPS_DEVICE_PXB },
     { "pxb-pcie", QEMU_CAPS_DEVICE_PXB_PCIE },
     { "tls-creds-x509", QEMU_CAPS_OBJECT_TLS_CREDS_X509 },
+    { "intel-iommu", QEMU_CAPS_DEVICE_INTEL_IOMMU },
 };
 
 static struct virQEMUCapsStringFlags virQEMUCapsObjectPropsVirtioBalloon[] = {
