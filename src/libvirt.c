@@ -970,7 +970,7 @@ virConnectOpenInternal(const char *name,
     if (ret == NULL)
         return NULL;
 
-    if (virConfLoadConfig(&conf, NULL) < 0)
+    if (virConfLoadConfig(&conf, "libvirt.conf") < 0)
         goto failed;
 
     if (name && name[0] == '\0')
