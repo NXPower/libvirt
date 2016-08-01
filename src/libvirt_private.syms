@@ -1714,6 +1714,7 @@ iptablesRemoveUdpOutput;
 virISCSIConnectionLogin;
 virISCSIConnectionLogout;
 virISCSIGetSession;
+virISCSINodeNew;
 virISCSINodeUpdate;
 virISCSIRescanLUNs;
 virISCSIScanTargets;
