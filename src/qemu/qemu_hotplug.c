@@ -1968,6 +1968,7 @@ qemuDomainAttachHostSCSIDevice(virConnectPtr conn,
     virErrorPtr orig_err;
     char *devstr = NULL;
     char *drvstr = NULL;
+    char *drivealias = NULL;
     bool teardowncgroup = false;
     bool teardownlabel = false;
     bool driveAdded = false;
@@ -2026,6 +2027,9 @@ qemuDomainAttachHostSCSIDevice(virConnectPtr conn,
     if (!(drvstr = qemuBuildSCSIHostdevDrvStr(hostdev)))
         goto cleanup;
 
+    if (!(drivealias = qemuAliasFromHostdev(hostdev)))
+        goto cleanup;
+
     if (!(devstr = qemuBuildSCSIHostdevDevStr(vm->def, hostdev, priv->qemuCaps)))
         goto cleanup;
 
@@ -2061,13 +2065,14 @@ qemuDomainAttachHostSCSIDevice(virConnectPtr conn,
                                                   vm->def, hostdev, NULL) < 0)
             VIR_WARN("Unable to restore host device labelling on hotplug fail");
     }
+    VIR_FREE(drivealias);
     VIR_FREE(drvstr);
     VIR_FREE(devstr);
     return ret;
 
  exit_monitor:
     orig_err = virSaveLastError();
-    if (driveAdded && qemuMonitorDriveDel(priv->mon, drvstr) < 0) {
+    if (driveAdded && qemuMonitorDriveDel(priv->mon, drivealias) < 0) {
         VIR_WARN("Unable to remove drive %s (%s) after failed "
                  "qemuMonitorAddDevice",
                  drvstr, devstr);
