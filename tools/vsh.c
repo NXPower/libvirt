@@ -2742,7 +2742,7 @@ vshReadline(vshControl *ctl, const char *prompt)
 /*
  * Initialize debug settings.
  */
-static void
+static int
 vshInitDebug(vshControl *ctl)
 {
     const char *debugEnv;
@@ -2770,6 +2770,8 @@ vshInitDebug(vshControl *ctl)
             vshOpenLogFile(ctl);
         }
     }
+
+    return 0;
 }
 
 
@@ -2792,9 +2794,9 @@ vshInit(vshControl *ctl, const vshCmdGrp *groups, const vshCmdDef *set)
 
     cmdGroups = groups;
     cmdSet = set;
-    vshInitDebug(ctl);
 
-    if (ctl->imode && vshReadlineInit(ctl) < 0)
+    if (vshInitDebug(ctl) < 0 ||
+        (ctl->imode && vshReadlineInit(ctl) < 0))
         return false;
 
     return true;
@@ -2809,7 +2811,8 @@ vshInitReload(vshControl *ctl)
         return false;
     }
 
-    vshInitDebug(ctl);
+    if (vshInitDebug(ctl) < 0)
+        return false;
 
     if (ctl->imode)
         vshReadlineDeinit(ctl);
