@@ -4114,7 +4114,6 @@ qemuDomainCheckDiskPresence(virQEMUDriverPtr driver,
                             virDomainObjPtr vm,
                             bool cold_boot)
 {
-    int ret = -1;
     size_t i;
 
     VIR_DEBUG("Checking for disk presence");
@@ -4141,13 +4140,10 @@ qemuDomainCheckDiskPresence(virQEMUDriverPtr driver,
         if (qemuDomainCheckDiskStartupPolicy(driver, vm, idx, cold_boot) >= 0)
             continue;
 
-        goto error;
+        return -1;
     }
 
-    ret = 0;
-
- error:
-    return ret;
+    return 0;
 }
 
 /*
