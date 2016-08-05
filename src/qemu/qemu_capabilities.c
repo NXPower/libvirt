@@ -338,6 +338,7 @@ VIR_ENUM_IMPL(virQEMUCaps, QEMU_CAPS_LAST,
 
               "tls-creds-x509", /* 230 */
               "intel-iommu",
+              "smm",
     );
 
 
@@ -3538,6 +3539,10 @@ virQEMUCapsInitQMPMonitor(virQEMUCapsPtr qemuCaps,
     if (qemuCaps->version >= 2003000)
         virQEMUCapsSet(qemuCaps, QEMU_CAPS_VHOSTUSER_MULTIQUEUE);
 
+    /* smm option is supported from v2.4.0 */
+    if (qemuCaps->version >= 2004000)
+        virQEMUCapsSet(qemuCaps, QEMU_CAPS_MACHINE_SMM_OPT);
+
     /* Since 2.4.50 ARM virt machine supports gic-version option */
     if (qemuCaps->version >= 2004050)
         virQEMUCapsSet(qemuCaps, QEMU_CAPS_MACH_VIRT_GIC_VERSION);
@@ -4053,6 +4058,17 @@ virQEMUCapsSupportsVmport(virQEMUCapsPtr qemuCaps,
     return qemuDomainMachineIsI440FX(def) ||
         qemuDomainMachineIsQ35(def) ||
         STREQ(def->os.machine, "isapc");
+}
+
+
+bool
+virQEMUCapsSupportsSMM(virQEMUCapsPtr qemuCaps,
+                       const virDomainDef *def)
+{
+    if (!virQEMUCapsGet(qemuCaps, QEMU_CAPS_MACHINE_SMM_OPT))
+        return false;
+
+    return qemuDomainMachineIsQ35(def);
 }
 
 
