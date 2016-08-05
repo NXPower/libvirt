@@ -8949,6 +8949,13 @@ qemuBuildDomainLoaderCommandLine(virCommandPtr cmd,
             goto cleanup;
         }
 
+        if (loader->secure == VIR_TRISTATE_BOOL_YES) {
+            virCommandAddArgList(cmd,
+                                 "-global",
+                                 "driver=cfi.pflash01,property=secure,value=on",
+                                 NULL);
+        }
+
         virBufferAsprintf(&buf,
                           "file=%s,if=pflash,format=raw,unit=%d",
                           loader->path, unit);
