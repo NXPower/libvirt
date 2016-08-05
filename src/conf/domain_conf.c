@@ -15371,9 +15371,11 @@ virDomainLoaderDefParseXML(xmlNodePtr node,
 {
     int ret = -1;
     char *readonly_str = NULL;
+    char *secure_str = NULL;
     char *type_str = NULL;
 
     readonly_str = virXMLPropString(node, "readonly");
+    secure_str = virXMLPropString(node, "secure");
     type_str = virXMLPropString(node, "type");
     loader->path = (char *) xmlNodeGetContent(node);
 
@@ -15381,6 +15383,13 @@ virDomainLoaderDefParseXML(xmlNodePtr node,
         (loader->readonly = virTristateBoolTypeFromString(readonly_str)) <= 0) {
         virReportError(VIR_ERR_XML_DETAIL,
                        _("unknown readonly value: %s"), readonly_str);
+        goto cleanup;
+    }
+
+    if (secure_str &&
+        (loader->secure = virTristateBoolTypeFromString(secure_str)) <= 0) {
+        virReportError(VIR_ERR_XML_DETAIL,
+                       _("unknown secure value: %s"), secure_str);
         goto cleanup;
     }
 
@@ -15397,6 +15406,7 @@ virDomainLoaderDefParseXML(xmlNodePtr node,
     ret = 0;
  cleanup:
     VIR_FREE(readonly_str);
+    VIR_FREE(secure_str);
     VIR_FREE(type_str);
     return ret;
 }
@@ -22512,12 +22522,16 @@ virDomainLoaderDefFormat(virBufferPtr buf,
                          virDomainLoaderDefPtr loader)
 {
     const char *readonly = virTristateBoolTypeToString(loader->readonly);
+    const char *secure = virTristateBoolTypeToString(loader->secure);
     const char *type = virDomainLoaderTypeToString(loader->type);
 
     virBufferAddLit(buf, "<loader");
 
     if (loader->readonly)
         virBufferAsprintf(buf, " readonly='%s'", readonly);
+
+    if (loader->secure)
+        virBufferAsprintf(buf, " secure='%s'", secure);
 
     virBufferAsprintf(buf, " type='%s'>", type);
 
