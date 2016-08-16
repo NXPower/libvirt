@@ -1329,6 +1329,7 @@ virDomainUSBAddressHubFree(virDomainUSBAddressHubPtr hub)
 
     for (i = 0; i < hub->nports; i++)
         virDomainUSBAddressHubFree(hub->ports[i]);
+    VIR_FREE(hub->ports);
     virBitmapFree(hub->portmap);
     VIR_FREE(hub);
 }
