@@ -169,10 +169,10 @@ virAdmGetDefaultURI(virConfPtr conf, char **uristr)
             return -1;
         VIR_DEBUG("Using LIBVIRT_ADMIN_DEFAULT_URI '%s'", *uristr);
     } else {
-        if ((value = virConfGetValue(conf, "admin_uri_default"))) {
+        if ((value = virConfGetValue(conf, "uri_default"))) {
             if (value->type != VIR_CONF_STRING) {
                 virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
-                               _("Expected a string for 'admin_uri_default' "
+                               _("Expected a string for 'uri_default' "
                                  "config parameter"));
                 return -1;
             }
