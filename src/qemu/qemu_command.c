@@ -6841,6 +6841,7 @@ qemuBuildCpuCommandLine(virCommandPtr cmd,
 
  cleanup:
     VIR_FREE(cpu);
+    virBufferFreeAndReset(&buf);
     return ret;
 }
 
