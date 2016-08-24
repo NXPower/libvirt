@@ -1382,8 +1382,9 @@ qemuMonitorJSONExtractCPUInfo(virJSONValuePtr reply,
 }
 
 
-int qemuMonitorJSONGetCPUInfo(qemuMonitorPtr mon,
-                              int **pids)
+int
+qemuMonitorJSONQueryCPUs(qemuMonitorPtr mon,
+                         int **pids)
 {
     int ret = -1;
     virJSONValuePtr cmd = qemuMonitorJSONMakeCommand("query-cpus",
