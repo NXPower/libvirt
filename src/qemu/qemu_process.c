@@ -5202,6 +5202,8 @@ qemuProcessLaunch(virConnectPtr conn,
     if (qemuDomainValidateVcpuInfo(vm) < 0)
         goto cleanup;
 
+    qemuDomainVcpuPersistOrder(vm->def);
+
     VIR_DEBUG("Detecting IOThread PIDs");
     if (qemuProcessDetectIOThreadPIDs(driver, vm, asyncJob) < 0)
         goto cleanup;
