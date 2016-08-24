@@ -5196,6 +5196,9 @@ qemuProcessLaunch(virConnectPtr conn,
     if (qemuDomainRefreshVcpuInfo(driver, vm, asyncJob) < 0)
         goto cleanup;
 
+    if (qemuDomainValidateVcpuInfo(vm) < 0)
+        goto cleanup;
+
     VIR_DEBUG("Detecting IOThread PIDs");
     if (qemuProcessDetectIOThreadPIDs(driver, vm, asyncJob) < 0)
         goto cleanup;
@@ -5988,6 +5991,9 @@ int qemuProcessAttach(virConnectPtr conn ATTRIBUTE_UNUSED,
 
     VIR_DEBUG("Detecting VCPU PIDs");
     if (qemuDomainRefreshVcpuInfo(driver, vm, QEMU_ASYNC_JOB_NONE) < 0)
+        goto error;
+
+    if (qemuDomainValidateVcpuInfo(vm) < 0)
         goto error;
 
     VIR_DEBUG("Detecting IOThread PIDs");
