@@ -339,6 +339,7 @@ VIR_ENUM_IMPL(virQEMUCaps, QEMU_CAPS_LAST,
               "tls-creds-x509", /* 230 */
               "intel-iommu",
               "smm",
+              "query-hotpluggable-cpus",
     );
 
 
@@ -1457,6 +1458,7 @@ struct virQEMUCapsStringFlags virQEMUCapsCommands[] = {
     { "__com.redhat_change-backing-file", QEMU_CAPS_CHANGE_BACKING_FILE },
     { "rtc-reset-reinjection", QEMU_CAPS_RTC_RESET_REINJECTION },
     { "migrate-incoming", QEMU_CAPS_INCOMING_DEFER },
+    { "query-hotpluggable-cpus", QEMU_CAPS_QUERY_HOTPLUGGABLE_CPUS },
 };
 
 struct virQEMUCapsStringFlags virQEMUCapsMigration[] = {
