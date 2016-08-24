@@ -2043,6 +2043,8 @@ struct _virDomainVcpuDef {
     virBitmapPtr cpumask;
 
     virDomainThreadSchedParam sched;
+
+    virObjectPtr privateData;
 };
 
 typedef struct _virDomainBlkiotune virDomainBlkiotune;
@@ -2261,14 +2263,6 @@ struct _virDomainDef {
     xmlNodePtr metadata;
 };
 
-int virDomainDefSetVcpusMax(virDomainDefPtr def, unsigned int vcpus);
-bool virDomainDefHasVcpusOffline(const virDomainDef *def);
-unsigned int virDomainDefGetVcpusMax(const virDomainDef *def);
-int virDomainDefSetVcpus(virDomainDefPtr def, unsigned int vcpus);
-unsigned int virDomainDefGetVcpus(const virDomainDef *def);
-virBitmapPtr virDomainDefGetOnlineVcpumap(const virDomainDef *def);
-virDomainVcpuDefPtr virDomainDefGetVcpu(virDomainDefPtr def, unsigned int vcpu)
-    ATTRIBUTE_RETURN_CHECK;
 
 unsigned long long virDomainDefGetMemoryInitial(const virDomainDef *def);
 void virDomainDefSetMemoryTotal(virDomainDefPtr def, unsigned long long size);
@@ -2422,6 +2416,7 @@ struct _virDomainXMLPrivateDataCallbacks {
     virDomainXMLPrivateDataFreeFunc   free;
     virDomainXMLPrivateDataNewFunc    diskNew;
     virDomainXMLPrivateDataNewFunc    hostdevNew;
+    virDomainXMLPrivateDataNewFunc    vcpuNew;
     virDomainXMLPrivateDataFormatFunc format;
     virDomainXMLPrivateDataParseFunc  parse;
 };
@@ -2452,6 +2447,17 @@ virDomainObjIsActive(virDomainObjPtr dom)
 {
     return dom->def->id != -1;
 }
+
+int virDomainDefSetVcpusMax(virDomainDefPtr def,
+                            unsigned int vcpus,
+                            virDomainXMLOptionPtr xmlopt);
+bool virDomainDefHasVcpusOffline(const virDomainDef *def);
+unsigned int virDomainDefGetVcpusMax(const virDomainDef *def);
+int virDomainDefSetVcpus(virDomainDefPtr def, unsigned int vcpus);
+unsigned int virDomainDefGetVcpus(const virDomainDef *def);
+virBitmapPtr virDomainDefGetOnlineVcpumap(const virDomainDef *def);
+virDomainVcpuDefPtr virDomainDefGetVcpu(virDomainDefPtr def, unsigned int vcpu)
+    ATTRIBUTE_RETURN_CHECK;
 
 virDomainObjPtr virDomainObjNew(virDomainXMLOptionPtr caps)
     ATTRIBUTE_NONNULL(1);
