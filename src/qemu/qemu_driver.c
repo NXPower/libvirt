@@ -1475,7 +1475,7 @@ qemuDomainHelperGetVcpus(virDomainObjPtr vm,
         memset(cpumaps, 0, sizeof(*cpumaps) * maxinfo);
 
     for (i = 0; i < virDomainDefGetVcpusMax(vm->def) && ncpuinfo < maxinfo; i++) {
-        virDomainVcpuInfoPtr vcpu = virDomainDefGetVcpu(vm->def, i);
+        virDomainVcpuDefPtr vcpu = virDomainDefGetVcpu(vm->def, i);
         pid_t vcpupid = qemuDomainGetVcpuPid(vm, i);
 
         if (!vcpu->online)
@@ -4620,7 +4620,7 @@ qemuDomainHotplugAddVcpu(virQEMUDriverPtr driver,
                          unsigned int vcpu)
 {
     qemuDomainObjPrivatePtr priv = vm->privateData;
-    virDomainVcpuInfoPtr vcpuinfo;
+    virDomainVcpuDefPtr vcpuinfo;
     int ret = -1;
     int rc;
     int oldvcpus = virDomainDefGetVcpus(vm->def);
@@ -4672,7 +4672,7 @@ qemuDomainHotplugDelVcpu(virQEMUDriverPtr driver,
                          unsigned int vcpu)
 {
     qemuDomainObjPrivatePtr priv = vm->privateData;
-    virDomainVcpuInfoPtr vcpuinfo;
+    virDomainVcpuDefPtr vcpuinfo;
     int ret = -1;
     int rc;
     int oldvcpus = virDomainDefGetVcpus(vm->def);
@@ -4919,7 +4919,7 @@ qemuDomainPinVcpuLive(virDomainObjPtr vm,
                       virBitmapPtr cpumap)
 {
     virBitmapPtr tmpmap = NULL;
-    virDomainVcpuInfoPtr vcpuinfo;
+    virDomainVcpuDefPtr vcpuinfo;
     qemuDomainObjPrivatePtr priv = vm->privateData;
     virCgroupPtr cgroup_vcpu = NULL;
     char *str = NULL;
@@ -5006,7 +5006,7 @@ qemuDomainPinVcpuFlags(virDomainPtr dom,
     virDomainDefPtr persistentDef;
     int ret = -1;
     virBitmapPtr pcpumap = NULL;
-    virDomainVcpuInfoPtr vcpuinfo = NULL;
+    virDomainVcpuDefPtr vcpuinfo = NULL;
     virQEMUDriverConfigPtr cfg = NULL;
 
     virCheckFlags(VIR_DOMAIN_AFFECT_LIVE |
@@ -9365,7 +9365,7 @@ qemuDomainSetNumaParamsLive(virDomainObjPtr vm,
     virCgroupFree(&cgroup_temp);
 
     for (i = 0; i < virDomainDefGetVcpusMax(vm->def); i++) {
-        virDomainVcpuInfoPtr vcpu = virDomainDefGetVcpu(vm->def, i);
+        virDomainVcpuDefPtr vcpu = virDomainDefGetVcpu(vm->def, i);
 
         if (!vcpu->online)
             continue;
@@ -9776,7 +9776,7 @@ qemuSetVcpusBWLive(virDomainObjPtr vm, virCgroupPtr cgroup,
         return 0;
 
     for (i = 0; i < virDomainDefGetVcpusMax(vm->def); i++) {
-        virDomainVcpuInfoPtr vcpu = virDomainDefGetVcpu(vm->def, i);
+        virDomainVcpuDefPtr vcpu = virDomainDefGetVcpu(vm->def, i);
 
         if (!vcpu->online)
             continue;
