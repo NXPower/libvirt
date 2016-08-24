@@ -1075,7 +1075,9 @@ virCapsPtr virTestGenericCapsInit(void)
     return NULL;
 }
 
-static virDomainDefParserConfig virTestGenericDomainDefParserConfig;
+static virDomainDefParserConfig virTestGenericDomainDefParserConfig = {
+    .features = VIR_DOMAIN_DEF_FEATURE_INDIVIDUAL_VCPUS,
+};
 static virDomainXMLPrivateDataCallbacks virTestGenericPrivateDataCallbacks;
 
 virDomainXMLOptionPtr virTestGenericDomainXMLConfInit(void)
