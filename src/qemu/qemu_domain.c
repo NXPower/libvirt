@@ -1368,7 +1368,7 @@ qemuDomainObjPrivateXMLFormatVcpus(virBufferPtr buf,
     virBufferAdjustIndent(buf, 2);
 
     for (i = 0; i < nvcpupids; i++)
-        virBufferAsprintf(buf, "<vcpu pid='%d'/>\n", vcpupids[i]);
+        virBufferAsprintf(buf, "<vcpu id='%zu' pid='%d'/>\n", i, vcpupids[i]);
 
     virBufferAdjustIndent(buf, -2);
     virBufferAddLit(buf, "</vcpus>\n");
@@ -1497,8 +1497,18 @@ qemuDomainObjPrivateXMLParseVcpu(xmlNodePtr node,
                                  unsigned int idx,
                                  qemuDomainObjPrivatePtr priv)
 {
+    char *idstr;
     char *pidstr;
     int ret = -1;
+
+    if ((idstr = virXMLPropString(node, "id"))) {
+        if (virStrToLong_uip(idstr, NULL, 10, &idx) < 0 ||
+            idx >= priv->nvcpupids) {
+            virReportError(VIR_ERR_INTERNAL_ERROR,
+                           _("invalid vcpu index '%s'"), idstr);
+            goto cleanup;
+        }
+    }
 
     if (!(pidstr = virXMLPropString(node, "pid")))
         goto cleanup;
@@ -1509,6 +1519,7 @@ qemuDomainObjPrivateXMLParseVcpu(xmlNodePtr node,
     ret = 0;
 
  cleanup:
+    VIR_FREE(idstr);
     VIR_FREE(pidstr);
     return ret;
 }
