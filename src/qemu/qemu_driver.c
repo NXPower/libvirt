@@ -4646,7 +4646,7 @@ qemuDomainHotplugAddVcpu(virQEMUDriverPtr driver,
 
     vcpuinfo->online = true;
 
-    if (qemuDomainRefreshVcpuInfo(driver, vm, QEMU_ASYNC_JOB_NONE) < 0)
+    if (qemuDomainRefreshVcpuInfo(driver, vm, QEMU_ASYNC_JOB_NONE, false) < 0)
         goto cleanup;
 
     if (qemuDomainValidateVcpuInfo(vm) < 0)
@@ -4695,7 +4695,7 @@ qemuDomainHotplugDelVcpu(virQEMUDriverPtr driver,
         goto cleanup;
     }
 
-    if (qemuDomainRefreshVcpuInfo(driver, vm, QEMU_ASYNC_JOB_NONE) < 0)
+    if (qemuDomainRefreshVcpuInfo(driver, vm, QEMU_ASYNC_JOB_NONE, false) < 0)
         goto cleanup;
 
     if (qemuDomainValidateVcpuInfo(vm) < 0) {
