@@ -2031,6 +2031,8 @@ struct _virDomainCputune {
     long long global_quota;
     unsigned long long emulator_period;
     long long emulator_quota;
+    unsigned long long iothread_period;
+    long long iothread_quota;
     virBitmapPtr emulatorpin;
 };
 
