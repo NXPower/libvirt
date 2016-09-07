@@ -456,7 +456,8 @@ static int
 x86DataToCPUFeatures(virCPUDefPtr cpu,
                      int policy,
                      virCPUx86Data *data,
-                     virCPUx86MapPtr map)
+                     virCPUx86MapPtr map,
+                     bool filter)
 {
     size_t i;
 
@@ -464,6 +465,13 @@ x86DataToCPUFeatures(virCPUDefPtr cpu,
         virCPUx86FeaturePtr feature = map->features[i];
         if (x86DataIsSubset(data, &feature->data)) {
             x86DataSubtract(data, &feature->data);
+
+            if (filter &&
+                (STREQ(feature->name, "cmt") ||
+                 STREQ(feature->name, "mbm_total") ||
+                 STREQ(feature->name, "mbm_local")))
+                continue;
+
             if (virCPUDefAddFeature(cpu, feature->name, policy) < 0)
                 return -1;
         }
@@ -595,8 +603,8 @@ x86DataToCPU(const virCPUx86Data *data,
     /* because feature policy is ignored for host CPU */
     cpu->type = VIR_CPU_TYPE_GUEST;
 
-    if (x86DataToCPUFeatures(cpu, VIR_CPU_FEATURE_REQUIRE, &copy, map) ||
-        x86DataToCPUFeatures(cpu, VIR_CPU_FEATURE_DISABLE, &modelData, map))
+    if (x86DataToCPUFeatures(cpu, VIR_CPU_FEATURE_REQUIRE, &copy, map, false) ||
+        x86DataToCPUFeatures(cpu, VIR_CPU_FEATURE_DISABLE, &modelData, map, false))
         goto error;
 
  cleanup:
@@ -1835,7 +1843,7 @@ x86Decode(virCPUDefPtr cpu,
 
         x86DataSubtract(&copy, &features);
         if (x86DataToCPUFeatures(cpuModel, VIR_CPU_FEATURE_REQUIRE,
-                                 &copy, map) < 0)
+                                 &copy, map, false) < 0)
             goto cleanup;
     }
 
@@ -2503,7 +2511,7 @@ x86UpdateCustom(virCPUDefPtr guest,
         guest->match = VIR_CPU_MATCH_EXACT;
         if (x86ModelSubtractCPU(host_model, guest, map) ||
             x86DataToCPUFeatures(guest, VIR_CPU_FEATURE_REQUIRE,
-                                 &host_model->data, map))
+                                 &host_model->data, map, true))
             goto cleanup;
     }
 
