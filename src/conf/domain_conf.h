@@ -2573,6 +2573,7 @@ void virDomainObjAssignDef(virDomainObjPtr domain,
 int virDomainObjSetDefTransient(virCapsPtr caps,
                                 virDomainXMLOptionPtr xmlopt,
                                 virDomainObjPtr domain);
+void virDomainObjRemoveTransientDef(virDomainObjPtr domain);
 virDomainDefPtr
 virDomainObjGetPersistentDef(virCapsPtr caps,
                              virDomainXMLOptionPtr xmlopt,

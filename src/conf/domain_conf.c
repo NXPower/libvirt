@@ -2958,6 +2958,25 @@ virDomainObjSetDefTransient(virCapsPtr caps,
     return ret;
 }
 
+
+/*
+ * Remove the running configuration and replace it with the persistent one.
+ *
+ * @param domain domain object pointer
+ */
+void
+virDomainObjRemoveTransientDef(virDomainObjPtr domain)
+{
+    if (!domain->newDef)
+        return;
+
+    virDomainDefFree(domain->def);
+    domain->def = domain->newDef;
+    domain->def->id = -1;
+    domain->newDef = NULL;
+}
+
+
 /*
  * Return the persistent domain configuration. If domain is transient,
  * return the running config.

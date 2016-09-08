@@ -788,13 +788,7 @@ libxlDomainCleanup(libxlDriverPrivatePtr driver,
         VIR_FREE(file);
     }
 
-    if (vm->newDef) {
-        virDomainDefFree(vm->def);
-        vm->def = vm->newDef;
-        vm->def->id = -1;
-        vm->newDef = NULL;
-    }
-
+    virDomainObjRemoveTransientDef(vm);
     virObjectUnref(cfg);
 }
 
