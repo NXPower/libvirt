@@ -3876,6 +3876,7 @@ qemuMigrationPrepareAny(virQEMUDriverPtr driver,
         if (nbdPort == 0)
             virPortAllocatorRelease(driver->migrationPorts, priv->nbdPort);
         priv->nbdPort = 0;
+        virDomainObjRemoveTransientDef(vm);
         qemuDomainRemoveInactive(driver, vm);
     }
     virDomainObjEndAPI(&vm);
