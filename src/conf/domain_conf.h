@@ -903,6 +903,7 @@ struct _virDomainNetDef {
             virTristateSwitch ioeventfd;
             virTristateSwitch event_idx;
             unsigned int queues; /* Multiqueue virtio-net */
+            unsigned int rx_queue_size;
             struct {
                 virTristateSwitch csum;
                 virTristateSwitch gso;
