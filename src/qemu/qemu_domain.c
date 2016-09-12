@@ -6057,3 +6057,23 @@ qemuDomainVcpuPersistOrder(virDomainDefPtr def)
         }
     }
 }
+
+
+int
+qemuDomainCheckMonitor(virQEMUDriverPtr driver,
+                       virDomainObjPtr vm,
+                       qemuDomainAsyncJob asyncJob)
+{
+    qemuDomainObjPrivatePtr priv = vm->privateData;
+    int ret;
+
+    if (qemuDomainObjEnterMonitorAsync(driver, vm, asyncJob) < 0)
+        return -1;
+
+    ret = qemuMonitorCheck(priv->mon);
+
+    if (qemuDomainObjExitMonitor(driver, vm) < 0)
+        return -1;
+
+    return ret;
+}
