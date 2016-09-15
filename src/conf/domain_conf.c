@@ -1035,13 +1035,13 @@ virDomainXMLOptionNew(virDomainDefParserConfigPtr config,
     /* Technically this forbids to use one of Xerox's MAC address prefixes in
      * our hypervisor drivers. This shouldn't ever be a problem.
      *
-     * Use the KVM prefix as default as it's in the privately administered
-     * range */
+     * Use the Nutanix prefix as the default. */
     if (xmlopt->config.macPrefix[0] == 0 &&
         xmlopt->config.macPrefix[1] == 0 &&
         xmlopt->config.macPrefix[2] == 0) {
-        xmlopt->config.macPrefix[0] = 0x52;
-        xmlopt->config.macPrefix[1] = 0x54;
+        xmlopt->config.macPrefix[0] = 0x50;
+        xmlopt->config.macPrefix[1] = 0x6b;
+        xmlopt->config.macPrefix[2] = 0x8d;
     }
 
     return xmlopt;

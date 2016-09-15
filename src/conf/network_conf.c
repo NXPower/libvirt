@@ -3398,7 +3398,7 @@ void virNetworkSetBridgeMacAddr(virNetworkDefPtr def)
         /* if the bridge doesn't have a mac address explicitly defined,
          * autogenerate a random one.
          */
-        virMacAddrGenerate((unsigned char[]){ 0x52, 0x54, 0 },
+        virMacAddrGenerate((unsigned char[]){ 0x50, 0x6b, 0x8d },
                            &def->mac);
         def->mac_specified = true;
     }
