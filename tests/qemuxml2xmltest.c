@@ -827,6 +827,7 @@ mymain(void)
     DO_TEST("tap-vhost");
     DO_TEST("tap-vhost-incorrect");
     DO_TEST("shmem");
+    DO_TEST("shmem-plain-doorbell");
     DO_TEST("smbios");
     DO_TEST("smbios-multiple-type2");
 
