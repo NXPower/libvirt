@@ -982,7 +982,7 @@ virDomainAuditShmem(virDomainObjPtr vm,
 
     virUUIDFormat(vm->def->uuid, uuidstr);
 
-    if (!vmname || !src || !size || !shmem ||
+    if (!vmname || !src || !shmem ||
         virAsprintfQuiet(&size, "%llu", def->size) < 0) {
         VIR_WARN("OOM while encoding audit message");
         goto cleanup;
@@ -996,7 +996,7 @@ virDomainAuditShmem(virDomainObjPtr vm,
 
     VIR_AUDIT(VIR_AUDIT_RECORD_RESOURCE, success,
               "virt=%s resrc=shmem reason=%s %s uuid=%s size=%s %s %s",
-              virt, reason, vmname, uuidstr, size ?: "?", shmem, src);
+              virt, reason, vmname, uuidstr, size, shmem, src);
 
  cleanup:
     VIR_FREE(vmname);
