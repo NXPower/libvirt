@@ -239,7 +239,7 @@ testQemuHotplug(const void *data)
         virTestLoadFile(device_filename, &device_xml) < 0)
         goto cleanup;
 
-    if (test->action != UPDATE &&
+    if (test->action == ATTACH &&
         virTestLoadFile(result_filename, &result_xml) < 0)
         goto cleanup;
 
