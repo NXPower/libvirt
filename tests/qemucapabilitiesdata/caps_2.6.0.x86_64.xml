@@ -194,6 +194,8 @@
   <flag name='tls-creds-x509'/>
   <flag name='intel-iommu'/>
   <flag name='smm'/>
+  <flag name='ivshmem-plain'/>
+  <flag name='ivshmem-doorbell'/>
   <version>2006000</version>
   <kvmVersion>0</kvmVersion>
   <package></package>
