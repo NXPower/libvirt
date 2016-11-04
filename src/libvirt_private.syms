@@ -460,6 +460,8 @@ virDomainShmemDefFind;
 virDomainShmemDefFree;
 virDomainShmemDefInsert;
 virDomainShmemDefRemove;
+virDomainShmemModelTypeFromString;
+virDomainShmemModelTypeToString;
 virDomainShutdownReasonTypeFromString;
 virDomainShutdownReasonTypeToString;
 virDomainShutoffReasonTypeFromString;
