@@ -940,8 +940,9 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
         return -1;
     }
 
-    if (actualType == VIR_DOMAIN_NET_TYPE_BRIDGE ||
-        actualType == VIR_DOMAIN_NET_TYPE_NETWORK) {
+    switch (actualType) {
+    case VIR_DOMAIN_NET_TYPE_BRIDGE:
+    case VIR_DOMAIN_NET_TYPE_NETWORK:
         tapfdSize = vhostfdSize = net->driver.virtio.queues;
         if (!tapfdSize)
             tapfdSize = vhostfdSize = 1;
@@ -958,7 +959,9 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
         if (qemuInterfaceOpenVhostNet(vm->def, net, priv->qemuCaps,
                                       vhostfd, &vhostfdSize) < 0)
             goto cleanup;
-    } else if (actualType == VIR_DOMAIN_NET_TYPE_DIRECT) {
+        break;
+
+    case VIR_DOMAIN_NET_TYPE_DIRECT:
         tapfdSize = vhostfdSize = net->driver.virtio.queues;
         if (!tapfdSize)
             tapfdSize = vhostfdSize = 1;
@@ -976,7 +979,9 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
         if (qemuInterfaceOpenVhostNet(vm->def, net, priv->qemuCaps,
                                       vhostfd, &vhostfdSize) < 0)
             goto cleanup;
-    } else if (actualType == VIR_DOMAIN_NET_TYPE_ETHERNET) {
+        break;
+
+    case VIR_DOMAIN_NET_TYPE_ETHERNET:
         tapfdSize = vhostfdSize = net->driver.virtio.queues;
         if (!tapfdSize)
             tapfdSize = vhostfdSize = 1;
@@ -987,13 +992,15 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
             goto cleanup;
         memset(vhostfd, -1, sizeof(*vhostfd) * vhostfdSize);
         if (qemuInterfaceEthernetConnect(vm->def, driver, net,
-                                       tapfd, tapfdSize) < 0)
+                                         tapfd, tapfdSize) < 0)
             goto cleanup;
         iface_connected = true;
         if (qemuInterfaceOpenVhostNet(vm->def, net, priv->qemuCaps,
                                       vhostfd, &vhostfdSize) < 0)
             goto cleanup;
-    } else if (actualType == VIR_DOMAIN_NET_TYPE_HOSTDEV) {
+        break;
+
+    case VIR_DOMAIN_NET_TYPE_HOSTDEV:
         /* This is really a "smart hostdev", so it should be attached
          * as a hostdev (the hostdev code will reach over into the
          * netdev-specific code as appropriate), then also added to
@@ -1004,6 +1011,20 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
          */
         ret = qemuDomainAttachHostDevice(NULL, driver, vm,
                                          virDomainNetGetActualHostdev(net));
+        goto cleanup;
+        break;
+
+    case VIR_DOMAIN_NET_TYPE_USER:
+    case VIR_DOMAIN_NET_TYPE_VHOSTUSER:
+    case VIR_DOMAIN_NET_TYPE_SERVER:
+    case VIR_DOMAIN_NET_TYPE_CLIENT:
+    case VIR_DOMAIN_NET_TYPE_MCAST:
+    case VIR_DOMAIN_NET_TYPE_INTERNAL:
+    case VIR_DOMAIN_NET_TYPE_UDP:
+    case VIR_DOMAIN_NET_TYPE_LAST:
+        virReportError(VIR_ERR_OPERATION_UNSUPPORTED,
+                       _("hotplug of interface type of %s is not implemented yet"),
+                       virDomainNetTypeToString(actualType));
         goto cleanup;
     }
 
