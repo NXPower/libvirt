@@ -898,7 +898,7 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
     int vlan;
     bool releaseaddr = false;
     bool iface_connected = false;
-    int actualType;
+    virDomainNetType actualType;
     virNetDevBandwidthPtr actualBandwidth;
     virQEMUDriverConfigPtr cfg = virQEMUDriverGetConfig(driver);
     size_t i;
@@ -2405,7 +2405,7 @@ qemuDomainChangeNet(virQEMUDriverPtr driver,
     virDomainNetDefPtr newdev = dev->data.net;
     virDomainNetDefPtr *devslot = NULL;
     virDomainNetDefPtr olddev;
-    int oldType, newType;
+    virDomainNetType oldType, newType;
     bool needReconnect = false;
     bool needBridgeChange = false;
     bool needFilterChange = false;

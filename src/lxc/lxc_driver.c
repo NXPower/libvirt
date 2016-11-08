@@ -3945,7 +3945,7 @@ lxcDomainAttachDeviceNetLive(virConnectPtr conn,
 {
     virLXCDomainObjPrivatePtr priv = vm->privateData;
     int ret = -1;
-    int actualType;
+    virDomainNetType actualType;
     virNetDevBandwidthPtr actualBandwidth;
     char *veth = NULL;
 
@@ -4031,6 +4031,10 @@ lxcDomainAttachDeviceNetLive(virConnectPtr conn,
 
         case VIR_DOMAIN_NET_TYPE_DIRECT:
             ignore_value(virNetDevMacVLanDelete(veth));
+            break;
+
+        default:
+            /* no-op */
             break;
         }
     }
@@ -4432,7 +4436,8 @@ static int
 lxcDomainDetachDeviceNetLive(virDomainObjPtr vm,
                              virDomainDeviceDefPtr dev)
 {
-    int detachidx, actualType, ret = -1;
+    int detachidx, ret = -1;
+    virDomainNetType actualType;
     virDomainNetDefPtr detach = NULL;
     virNetDevVPortProfilePtr vport = NULL;
 
