@@ -180,6 +180,7 @@ int virPCIDeviceAddressGetIOMMUGroupAddresses(virPCIDeviceAddressPtr devAddr,
                                               size_t *nIommuGroupDevices);
 int virPCIDeviceAddressGetIOMMUGroupNum(virPCIDeviceAddressPtr addr);
 char *virPCIDeviceGetIOMMUGroupDev(virPCIDevicePtr dev);
+char *virPCIDeviceGetIOMMUGroupDevSysfs(char *sysfs);
 
 int virPCIDeviceIsAssignable(virPCIDevicePtr dev,
                              int strict_acs_check);

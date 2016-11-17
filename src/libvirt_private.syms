@@ -2088,6 +2088,7 @@ virPCIDeviceFileIterate;
 virPCIDeviceFree;
 virPCIDeviceGetDriverPathAndName;
 virPCIDeviceGetIOMMUGroupDev;
+virPCIDeviceGetIOMMUGroupDevSysfs;
 virPCIDeviceGetIOMMUGroupList;
 virPCIDeviceGetLinkCapSta;
 virPCIDeviceGetManaged;

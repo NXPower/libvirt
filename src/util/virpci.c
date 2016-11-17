@@ -2197,6 +2197,39 @@ virPCIDeviceAddressGetIOMMUGroupNum(virPCIDeviceAddressPtr addr)
     return ret;
 }
 
+/* virPCIDeviceGetIOMMUGroupDevSysfs - return the name of the device used
+ * to control this PCI device's group (e.g. "/dev/vfio/15")
+ */
+char *
+virPCIDeviceGetIOMMUGroupDevSysfs(char *sysfs)
+{
+    char *devPath = NULL;
+    char *groupPath = NULL;
+    char *groupDev = NULL;
+
+    if (virAsprintf(&devPath, "%s/iommu_group", sysfs) < 0)
+        goto cleanup;
+    if (virFileIsLink(devPath) != 1) {
+        virReportError(VIR_ERR_INTERNAL_ERROR,
+                       _("Invalid device %s iommu_group file %s is not a symlink"),
+                       sysfs, devPath);
+        goto cleanup;
+    }
+    if (virFileResolveLink(devPath, &groupPath) < 0) {
+        virReportError(VIR_ERR_INTERNAL_ERROR,
+                       _("Unable to resolve device %s iommu_group symlink %s"),
+                       sysfs, devPath);
+        goto cleanup;
+    }
+    if (virAsprintf(&groupDev, "/dev/vfio/%s",
+                    last_component(groupPath)) < 0)
+        goto cleanup;
+ cleanup:
+    VIR_FREE(devPath);
+    VIR_FREE(groupPath);
+    return groupDev;
+}
+
 
 /* virPCIDeviceGetIOMMUGroupDev - return the name of the device used
  * to control this PCI device's group (e.g. "/dev/vfio/15")

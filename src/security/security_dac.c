@@ -647,6 +647,15 @@ virSecurityDACSetHostdevLabel(virSecurityManagerPtr mgr,
             }
             ret = virSecurityDACSetPCILabel(pci, vfioGroupDev, &cbdata);
             VIR_FREE(vfioGroupDev);
+        } else if (pcisrc->backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+            char *vfioGroupDev = virPCIDeviceGetIOMMUGroupDevSysfs(pcisrc->sysfs);
+
+            if (!vfioGroupDev) {
+                virPCIDeviceFree(pci);
+                goto done;
+            }
+            ret = virSecurityDACSetPCILabel(pci, vfioGroupDev, &cbdata);
+            VIR_FREE(vfioGroupDev);
         } else {
             ret = virPCIDeviceFileIterate(pci,
                                           virSecurityDACSetPCILabel,
@@ -774,6 +783,15 @@ virSecurityDACRestoreHostdevLabel(virSecurityManagerPtr mgr,
 
         if (pcisrc->backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO) {
             char *vfioGroupDev = virPCIDeviceGetIOMMUGroupDev(pci);
+
+            if (!vfioGroupDev) {
+                virPCIDeviceFree(pci);
+                goto done;
+            }
+            ret = virSecurityDACRestorePCILabel(pci, vfioGroupDev, mgr);
+            VIR_FREE(vfioGroupDev);
+        } else if (pcisrc->backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+            char *vfioGroupDev = virPCIDeviceGetIOMMUGroupDevSysfs(pcisrc->sysfs);
 
             if (!vfioGroupDev) {
                 virPCIDeviceFree(pci);

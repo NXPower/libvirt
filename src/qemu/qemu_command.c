@@ -4559,6 +4559,7 @@ qemuBuildPCIHostdevDevStr(const virDomainDef *def,
             virBufferAsprintf(&buf, ",configfd=%s", configfd);
         break;
 
+    case VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV:
     case VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO:
         virBufferAddLit(&buf, "vfio-pci");
         break;
@@ -4572,20 +4573,24 @@ qemuBuildPCIHostdevDevStr(const virDomainDef *def,
         goto error;
     }
 
-    virBufferAddLit(&buf, ",host=");
-    if (pcisrc->addr.domain) {
-        if (!virQEMUCapsGet(qemuCaps, QEMU_CAPS_HOST_PCI_MULTIDOMAIN)) {
-            virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
-                           _("non-zero domain='%.4x' in host device PCI address "
-                             "not supported in this QEMU binary"),
-                           pcisrc->addr.domain);
-            goto error;
+    if (backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+        virBufferAsprintf(&buf, ",sysfsdev=%s", pcisrc->sysfs );
+    } else {
+        virBufferAddLit(&buf, ",host=");
+        if (pcisrc->addr.domain) {
+            if (!virQEMUCapsGet(qemuCaps, QEMU_CAPS_HOST_PCI_MULTIDOMAIN)) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                               _("non-zero domain='%.4x' in host device PCI address "
+                                 "not supported in this QEMU binary"),
+                               pcisrc->addr.domain);
+                goto error;
+            }
+            virBufferAsprintf(&buf, "%.4x:", pcisrc->addr.domain);
         }
-        virBufferAsprintf(&buf, "%.4x:", pcisrc->addr.domain);
-    }
-    virBufferAsprintf(&buf, "%.2x:%.2x.%.1x",
-                      pcisrc->addr.bus, pcisrc->addr.slot,
-                      pcisrc->addr.function);
+        virBufferAsprintf(&buf, "%.2x:%.2x.%.1x",
+                          pcisrc->addr.bus, pcisrc->addr.slot,
+                          pcisrc->addr.function);
+    } 
     virBufferAsprintf(&buf, ",id=%s", dev->info->alias);
     if (dev->info->bootIndex)
         bootIndex = dev->info->bootIndex;

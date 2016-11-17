@@ -323,6 +323,19 @@ qemuSetupHostdevCgroup(virDomainObjPtr vm,
                                          "allow", path, "rw", rv == 0);
                 if (rv < 0)
                     goto cleanup;
+            } else if (pcisrc->backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+                int rv;
+
+                if (!(path = virPCIDeviceGetIOMMUGroupDevSysfs(pcisrc->sysfs)))
+                    goto cleanup;
+
+                VIR_DEBUG("Cgroup allow %s for PCI device assignment", path);
+                rv = virCgroupAllowDevicePath(priv->cgroup, path,
+                                              VIR_CGROUP_DEVICE_RW, false);
+                virDomainAuditCgroupPath(vm, priv->cgroup,
+                                         "allow", path, "rw", rv == 0);
+                if (rv < 0)
+                    goto cleanup;
             }
             break;
 
@@ -428,6 +441,19 @@ qemuTeardownHostdevCgroup(virDomainObjPtr vm,
                 VIR_DEBUG("Cgroup deny %s for PCI device assignment", path);
                 rv = virCgroupDenyDevicePath(priv->cgroup, path,
                                              VIR_CGROUP_DEVICE_RWM, false);
+                virDomainAuditCgroupPath(vm, priv->cgroup,
+                                         "deny", path, "rwm", rv == 0);
+                if (rv < 0)
+                    goto cleanup;
+            } else if (pcisrc->backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+                int rv;
+
+                if (!(path = virPCIDeviceGetIOMMUGroupDevSysfs(pcisrc->sysfs)))
+                    goto cleanup;
+
+                VIR_DEBUG("Cgroup allow %s for PCI device assignment", path);
+                rv = virCgroupDenyDevicePath(priv->cgroup, path,
+                                              VIR_CGROUP_DEVICE_RWM, false);
                 virDomainAuditCgroupPath(vm, priv->cgroup,
                                          "deny", path, "rwm", rv == 0);
                 if (rv < 0)

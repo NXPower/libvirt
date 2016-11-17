@@ -650,7 +650,8 @@ VIR_ENUM_IMPL(virDomainHostdevSubsysPCIBackend,
               "default",
               "kvm",
               "vfio",
-              "xen")
+              "xen",
+              "vfio_mdev")
 
 VIR_ENUM_IMPL(virDomainHostdevSubsysSCSIProtocol,
               VIR_DOMAIN_HOSTDEV_SCSI_PROTOCOL_TYPE_LAST,
@@ -2251,6 +2252,15 @@ void virDomainHostdevDefClear(virDomainHostdevDefPtr def)
                 virDomainHostdevSubsysSCSIiSCSIClear(&scsisrc->u.iscsi);
             } else {
                 VIR_FREE(scsisrc->u.host.adapter);
+            }
+        } else if (def->source.subsys.type == VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_PCI) {
+            virDomainHostdevSubsysPCIPtr pcisrc = &def->source.subsys.u.pci;
+            if (pcisrc->backend ==
+                VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+                VIR_FREE(pcisrc->device_id);
+                VIR_FREE(pcisrc->extra_param);
+                VIR_FREE(pcisrc->sysfs);
+                VIR_FREE(pcisrc->uuid);
             }
         }
         break;
@@ -6104,6 +6114,9 @@ virDomainHostdevDefParseXMLSubsys(xmlNodePtr node,
     char *sgio = NULL;
     char *rawio = NULL;
     char *backendStr = NULL;
+    char *uuidStr = NULL;
+    char *device_idStr = NULL;
+    char *extra_paramStr = NULL;
     int backend;
     int ret = -1;
     virDomainHostdevSubsysPCIPtr pcisrc = &def->source.subsys.u.pci;
@@ -6200,6 +6213,27 @@ virDomainHostdevDefParseXMLSubsys(xmlNodePtr node,
                            _("Unknown PCI device <driver name='%s'/> "
                              "has been specified"), backendStr);
             goto error;
+        }
+        if (backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV )
+        {
+            uuidStr = virXPathString("string(./mdev/@uuid)", ctxt);
+            if (!uuidStr)
+                goto error;
+            pcisrc->uuid = uuidStr;
+            if (virAsprintf(&pcisrc->sysfs, "/sys/bus/mdev/devices/%s",
+                                                            pcisrc->uuid) < 0) {
+                VIR_FREE(pcisrc->uuid);
+                goto error;
+            }
+            device_idStr = virXPathString("string(./mdev/@device_id)", ctxt);
+            if (!device_idStr) {
+                VIR_FREE(pcisrc->uuid);
+                VIR_FREE(pcisrc->sysfs);
+                goto error;
+            }
+            pcisrc->device_id = device_idStr;
+            extra_paramStr = virXPathString("string(./mdev/@extra_param)", ctxt);
+            pcisrc->extra_param = extra_paramStr;
         }
         pcisrc->backend = backend;
 
@@ -20779,6 +20813,16 @@ virDomainHostdevDefFormatSubsys(virBufferPtr buf,
             return -1;
         }
         virBufferAsprintf(buf, "<driver name='%s'/>\n", backend);
+        if (pcisrc->backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV) {
+            virBufferAsprintf(buf, "<mdev uuid='%s' device_id='%s'",
+                              pcisrc->uuid, pcisrc->device_id);
+            if (pcisrc->extra_param) {
+                virBufferAsprintf(buf, " extra_param='%s'/>\n",
+                                  pcisrc->extra_param);
+            } else {
+                virBufferAsprintf(buf, "/>\n");
+            }
+        }
     }
 
     virBufferAddLit(buf, "<source");

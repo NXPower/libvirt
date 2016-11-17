@@ -304,6 +304,7 @@ typedef enum {
     VIR_DOMAIN_HOSTDEV_PCI_BACKEND_KVM,    /* force legacy kvm style */
     VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO,   /* force vfio */
     VIR_DOMAIN_HOSTDEV_PCI_BACKEND_XEN,    /* force legacy xen style, use pciback */
+    VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV,   /* force vfio sysfs */
 
     VIR_DOMAIN_HOSTDEV_PCI_BACKEND_TYPE_LAST
 } virDomainHostdevSubsysPCIBackendType;
@@ -336,6 +337,10 @@ typedef virDomainHostdevSubsysPCI *virDomainHostdevSubsysPCIPtr;
 struct _virDomainHostdevSubsysPCI {
     virPCIDeviceAddress addr; /* host address */
     int backend; /* enum virDomainHostdevSubsysPCIBackendType */
+    char *sysfs;
+    char *uuid;
+    char *device_id;
+    char *extra_param;
 };
 
 typedef struct _virDomainHostdevSubsysSCSIHost virDomainHostdevSubsysSCSIHost;

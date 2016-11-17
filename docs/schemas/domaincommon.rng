@@ -3959,9 +3959,19 @@
               <value>kvm</value>
               <value>vfio</value>
               <value>xen</value>
+              <value>vfio_mdev</value>
             </choice>
           </attribute>
           <empty/>
+        </element>
+      </optional>
+      <optional>
+        <element name="mdev">
+          <ref name="uuid"/>
+          <ref name="device_id"/>
+          <optional>
+          <ref name="extra_param"/>
+          </optional>
         </element>
       </optional>
       <element name="source">

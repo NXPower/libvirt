@@ -203,6 +203,7 @@ qemuHostdevPreparePCIDevicesCheckSupport(virDomainHostdevDefPtr *hostdevs,
             break;
 
         case VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO:
+        case VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV:
             if (!supportsPassthroughVFIO) {
                 virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
                                _("host doesn't support VFIO PCI passthrough"));
