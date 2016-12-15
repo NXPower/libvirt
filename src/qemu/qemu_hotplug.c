@@ -885,6 +885,7 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
                           virDomainNetDefPtr net)
 {
     qemuDomainObjPrivatePtr priv = vm->privateData;
+    virErrorPtr originalError = NULL;
     char **tapfdName = NULL;
     int *tapfd = NULL;
     size_t tapfdSize = 0;
@@ -1266,6 +1267,7 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
     if (!virDomainObjIsActive(vm))
         goto cleanup;
 
+    originalError = virSaveLastError();
     if (vlan < 0) {
         if (virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_NETDEV)) {
             char *netdev_name;
@@ -1296,6 +1298,8 @@ qemuDomainAttachNetDevice(virQEMUDriverPtr driver,
         ignore_value(qemuDomainObjExitMonitor(driver, vm));
         VIR_FREE(hostnet_name);
     }
+    virSetError(originalError);
+    virFreeError(originalError);
     goto cleanup;
 }
 
