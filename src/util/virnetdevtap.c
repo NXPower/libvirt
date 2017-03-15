@@ -280,6 +280,14 @@ int virNetDevTapCreate(char **ifname,
 
         }
 
+# ifdef IFF_RX_CSUM_FIXUP
+        if (flags & VIR_NETDEV_TAP_CREATE_CSUM_FIXUP) {
+          VIR_INFO("Enabling IFF_RX_CSUM_FIXUP for interface %s: ifr_flags: %x\n",
+              ifr.ifr_name, ifr.ifr_flags);
+          ifr.ifr_flags |= IFF_RX_CSUM_FIXUP;
+        }
+# endif
+
         if (ioctl(fd, TUNSETIFF, &ifr) < 0) {
             virReportSystemError(errno,
                                  _("Unable to create tap device %s"),

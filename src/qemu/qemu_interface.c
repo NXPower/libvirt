@@ -413,6 +413,10 @@ qemuInterfaceEthernetConnect(virDomainDefPtr def,
     virQEMUDriverConfigPtr cfg = virQEMUDriverGetConfig(driver);
     const char *tunpath = "/dev/net/tun";
 
+    if (cfg->fixupCsum) {
+      tap_create_flags |= VIR_NETDEV_TAP_CREATE_CSUM_FIXUP;
+    }
+
     if (net->backend.tap) {
         tunpath = net->backend.tap;
         if (!virQEMUDriverIsPrivileged(driver)) {

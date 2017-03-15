@@ -603,6 +603,7 @@ int virQEMUDriverConfigLoadFile(virQEMUDriverConfigPtr cfg,
         goto cleanup;
 
     GET_VALUE_BOOL("dynamic_ownership", cfg->dynamicOwnership);
+    GET_VALUE_BOOL("fixup_csum", cfg->fixupCsum);
 
     p = virConfGetValue(conf, "cgroup_controllers");
     CHECK_TYPE("cgroup_controllers", VIR_CONF_LIST);

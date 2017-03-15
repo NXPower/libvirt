@@ -177,6 +177,7 @@ struct _virQEMUDriverConfig {
     int migrationPortMax;
 
     bool logTimestamp;
+    bool fixupCsum;
     bool stdioLogD;
 
     virFirmwarePtr *firmwares;
