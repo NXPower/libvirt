@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <math.h>
+#include <stdio.h>
 #include <strings.h>
 #include <time.h>
 #include <fcntl.h>
@@ -77,6 +78,14 @@ virRandomOnceInit(void)
 
     if (debug && virStrToLong_ui(debug, NULL, 0, &seed) < 0)
         return -1;
+#elif defined(__linux__)
+    FILE *urandom = fopen("/dev/urandom", "r");
+
+    if (!urandom || fread(&seed, sizeof(seed), 1, urandom) != 1) {
+        abort();
+    }
+
+    fclose(urandom);
 #endif
 
     if (initstate_r(seed,
