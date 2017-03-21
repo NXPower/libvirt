@@ -303,8 +303,8 @@ int virNetDevTapCreate(char **ifname,
                 goto cleanup;
         }
 
-        if ((flags & VIR_NETDEV_TAP_CREATE_PERSIST) &&
-            ioctl(fd, TUNSETPERSIST, 1) < 0) {
+        if (ioctl(fd, TUNSETPERSIST,
+                  !!(flags & VIR_NETDEV_TAP_CREATE_PERSIST)) < 0) {
             virReportSystemError(errno,
                                  _("Unable to set tap device %s to persistent"),
                                  NULLSTR(*ifname));
