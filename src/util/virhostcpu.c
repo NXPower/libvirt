@@ -533,6 +533,9 @@ virHostCPUHasValidSubcoreConfiguration(int threads_per_subcore)
     return ret;
 }
 
+#define SCHED_DEBUG_PATH "/proc/sched_debug"
+#define SCHED_CPU0_STR "cpu#0"
+
 int
 virHostCPUGetInfoPopulateLinux(FILE *cpuinfo,
                                virArch arch,
@@ -555,13 +558,36 @@ virHostCPUGetInfoPopulateLinux(FILE *cpuinfo,
     char *sysfs_nodedir = NULL;
     char *sysfs_cpudir = NULL;
     int direrr;
+    FILE *sched_debug;
 
     *mhz = 0;
     *cpus = *nodes = *sockets = *cores = *threads = 0;
 
+    sched_debug = fopen(SCHED_DEBUG_PATH, "r");
+    if (sched_debug) {
+        while (fgets(line, sizeof(line), sched_debug) != NULL) {
+            char *buf = line;
+            if (STRPREFIX(buf, SCHED_CPU0_STR)) {
+                char *p;
+                unsigned int ui;
+                buf += strlen(SCHED_CPU0_STR) + 1;
+                while (*buf && c_isspace(*buf))
+                    buf++;
+                if (virStrToLong_ui(buf, &p, 10, &ui) == 0 &&
+                    /* Accept trailing fractional part.  */
+                    (*p == '\0' || *p == '.' || c_isspace(*p))) {
+                    *mhz = ui;
+                    VIR_FORCE_FCLOSE(sched_debug);
+                    goto cpu_bitmap;
+                }
+            }
+        }
+        VIR_FORCE_FCLOSE(sched_debug);
+    }
+
     /* Start with parsing CPU clock speed from /proc/cpuinfo */
     while (fgets(line, sizeof(line), cpuinfo) != NULL) {
-        if (ARCH_IS_X86(arch)) {
+        if (ARCH_IS_X86(arch) && !*mhz) {
             char *buf = line;
             if (STRPREFIX(buf, "cpu MHz")) {
                 char *p;
@@ -639,6 +665,7 @@ virHostCPUGetInfoPopulateLinux(FILE *cpuinfo,
         }
     }
 
+cpu_bitmap:
     /* Get information about what CPUs are present in the host and what
      * CPUs are online, so that we don't have to so for each node */
     present_cpus_map = virHostCPUGetPresentBitmap();
