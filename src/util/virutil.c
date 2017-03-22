@@ -671,7 +671,6 @@ virGetHostnameImpl(bool quiet)
 {
     int r;
     char hostname[HOST_NAME_MAX+1], *result = NULL;
-    struct addrinfo hints, *info;
 
     r = gethostname(hostname, sizeof(hostname));
     if (r == -1) {
@@ -682,52 +681,16 @@ virGetHostnameImpl(bool quiet)
     }
     NUL_TERMINATE(hostname);
 
-    if (STRPREFIX(hostname, "localhost") || strchr(hostname, '.')) {
-        /* in this case, gethostname returned localhost (meaning we can't
-         * do any further canonicalization), or it returned an FQDN (and
-         * we don't need to do any further canonicalization).  Return the
-         * string as-is; it's up to callers to check whether "localhost"
-         * is allowed.
-         */
-        ignore_value(VIR_STRDUP_QUIET(result, hostname));
-        goto cleanup;
-    }
-
-    /* otherwise, it's a shortened, non-localhost, hostname.  Attempt to
-     * canonicalize the hostname by running it through getaddrinfo
+    /*
+     * NUTANIX_INTERNAL
+     * We do not need to find the FQDN.
+     * Bypass all getaddrinfo() lookups.
      */
 
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_flags = AI_CANONNAME|AI_CANONIDN;
-    hints.ai_family = AF_UNSPEC;
-    r = getaddrinfo(hostname, NULL, &hints, &info);
-    if (r != 0) {
-        if (!quiet)
-            VIR_WARN("getaddrinfo failed for '%s': %s",
-                     hostname, gai_strerror(r));
-        ignore_value(VIR_STRDUP_QUIET(result, hostname));
-        goto cleanup;
+    if (VIR_STRDUP(result, hostname) < 1) {
+        return NULL;
     }
 
-    /* Tell static analyzers about getaddrinfo semantics.  */
-    sa_assert(info);
-
-    if (info->ai_canonname == NULL ||
-        STRPREFIX(info->ai_canonname, "localhost"))
-        /* in this case, we tried to canonicalize and we ended up back with
-         * localhost.  Ignore the canonicalized name and just return the
-         * original hostname
-         */
-        ignore_value(VIR_STRDUP_QUIET(result, hostname));
-    else
-        /* Caller frees this string. */
-        ignore_value(VIR_STRDUP_QUIET(result, info->ai_canonname));
-
-    freeaddrinfo(info);
-
- cleanup:
-    if (!result)
-        virReportOOMError();
     return result;
 }
 

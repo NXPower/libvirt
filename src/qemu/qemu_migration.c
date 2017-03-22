@@ -425,7 +425,7 @@ qemuMigrationCookieNew(virDomainObjPtr dom)
         goto error;
     memcpy(mig->uuid, dom->def->uuid, VIR_UUID_BUFLEN);
 
-    if (!(mig->localHostname = virGetHostname()))
+    if (!(mig->localHostname = virGetHostnameQuiet()))
         goto error;
     if (virGetHostUUID(mig->localHostuuid) < 0) {
         virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
@@ -4030,7 +4030,7 @@ qemuMigrationPrepareDirect(virQEMUDriverPtr driver,
             if (VIR_STRDUP(hostname, migrateHost) < 0)
                 goto cleanup;
         } else {
-            if ((hostname = virGetHostname()) == NULL)
+            if ((hostname = virGetHostnameQuiet()) == NULL)
                 goto cleanup;
         }
 

@@ -3869,7 +3869,7 @@ qemuLogOperation(virDomainObjPtr vm,
     qemuDomainObjPrivatePtr priv = vm->privateData;
     int qemuVersion = virQEMUCapsGetVersion(priv->qemuCaps);
     const char *package = virQEMUCapsGetPackage(priv->qemuCaps);
-    char *hostname = virGetHostname();
+    char *hostname = virGetHostnameQuiet();
 
     if ((timestamp = virTimeStringNow()) == NULL)
         goto cleanup;

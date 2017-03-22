@@ -303,7 +303,7 @@ daemonConfigNew(bool privileged ATTRIBUTE_UNUSED)
     data->admin_keepalive_interval = 5;
     data->admin_keepalive_count = 5;
 
-    localhost = virGetHostname();
+    localhost = virGetHostnameQuiet();
     if (localhost == NULL) {
         /* we couldn't resolve the hostname; assume that we are
          * running in disconnected operation, and report a less
