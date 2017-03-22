@@ -2642,6 +2642,8 @@ typedef enum {
     VIR_DOMAIN_DEF_PARSE_ABI_UPDATE = 1 << 9,
     /* skip definition validation checks meant to be executed on define time only */
     VIR_DOMAIN_DEF_PARSE_SKIP_VALIDATE = 1 << 10,
+    /* enable hugepages if possible, even if not defined on the config */
+    VIR_DOMAIN_DEF_PARSE_HUGEBYDEF = 1 << 11,
 } virDomainDefParseFlags;
 
 typedef enum {

@@ -4142,7 +4142,8 @@ qemuMigrationPrepareDef(virQEMUDriverPtr driver,
 
     if (!(def = virDomainDefParseString(dom_xml, caps, driver->xmlopt,
                                         VIR_DOMAIN_DEF_PARSE_INACTIVE |
-                                        VIR_DOMAIN_DEF_PARSE_SKIP_VALIDATE)))
+                                        VIR_DOMAIN_DEF_PARSE_SKIP_VALIDATE |
+                                        VIR_DOMAIN_DEF_PARSE_HUGEBYDEF)))
         goto cleanup;
 
     if (dname) {

@@ -1732,7 +1732,8 @@ static virDomainPtr qemuDomainCreateXML(virConnectPtr conn,
     unsigned int start_flags = VIR_QEMU_PROCESS_START_COLD;
     virCapsPtr caps = NULL;
     unsigned int parse_flags = VIR_DOMAIN_DEF_PARSE_INACTIVE |
-                               VIR_DOMAIN_DEF_PARSE_ABI_UPDATE;
+                               VIR_DOMAIN_DEF_PARSE_ABI_UPDATE |
+                               VIR_DOMAIN_DEF_PARSE_HUGEBYDEF;
 
     virCheckFlags(VIR_DOMAIN_START_PAUSED |
                   VIR_DOMAIN_START_AUTODESTROY |

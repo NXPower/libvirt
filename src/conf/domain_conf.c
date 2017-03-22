@@ -16048,6 +16048,53 @@ virDomainDefParseXML(xmlDocPtr xml,
     bool usb_master = false;
     char *netprefix = NULL;
 
+    /* If hugepages are available (and not yet set), enable them on the XML */
+    node = virXPathNode("./memoryBacking/hugepages", ctxt);
+    if (!node && (flags & VIR_DOMAIN_DEF_PARSE_HUGEBYDEF)) {
+        for (i=0; i<caps->host.nnumaCell; i++) {
+            virCapsHostNUMACellPtr cell = caps->host.numaCell[i];
+            for (j=0; j<cell->npageinfo; j++) {
+                bool is_hugepage;
+
+                /* To get list of hugepage sizes available, run
+                   `ls /sys/kernel/mm/hugepages` on the host */
+                switch (cell->pageinfo[j].size) {
+#if defined(__x86_64__)
+                case 2048:                // hugepages-2048kB
+                case 1048576:             // hugepages-1048576kB
+#elif defined(__powerpc64__)
+                case 1024:                // hugepages-1024kB
+                case 16384:               // hugepages-16384kB
+                case 16777216:            // hugepages-16777216kB
+#else
+                case -1:
+#endif
+                    is_hugepage = true;
+                    break;
+                default:
+                    is_hugepage = false;
+                }
+
+                if (cell->pageinfo[j].avail && is_hugepage) {
+                    /* Huge pages available and not yet set, so set them */
+                    node = virXPathNode("./memoryBacking", ctxt);
+                    if (!node) {
+                        node = xmlNewChild(root, NULL,
+                                           BAD_CAST "memoryBacking", NULL);
+                        if (!node) {
+                            virReportError(VIR_ERR_INTERNAL_ERROR,
+                                           "%s", _("Error creating memoryBacking"));
+                            return NULL;
+                        }
+                    }
+                    xmlNewChild(node, NULL, BAD_CAST "hugepages", NULL);
+                    goto hugepage_done;
+                }
+            }
+        }
+    }
+ hugepage_done:
+
     if (flags & VIR_DOMAIN_DEF_PARSE_VALIDATE_SCHEMA) {
         char *schema = virFileFindResource("domain.rng",
                                            abs_topsrcdir "/docs/schemas",
