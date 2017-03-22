@@ -1772,6 +1772,8 @@ struct _virDomainOSDef {
     char *bootloader;
     char *bootloaderArgs;
     int smbios_mode;
+    /* Maximum ram below 4G in bytes */
+    unsigned long long max_ram_below_4g;
 
     virDomainBIOSDef bios;
 };

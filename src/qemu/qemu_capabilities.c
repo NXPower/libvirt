@@ -295,7 +295,8 @@ VIR_ENUM_IMPL(virQEMUCaps, QEMU_CAPS_LAST,
               "ioh3420",
               "x3130-upstream",
 
-              "xio3130-downstream", /* 195 */
+              "max-ram-below-4g", /* 195 */
+              "xio3130-downstream",
               "rtl8139",
               "e1000",
               "virtio-net",
@@ -2655,6 +2656,7 @@ struct virQEMUCapsCommandLineProps {
 static struct virQEMUCapsCommandLineProps virQEMUCapsCommandLine[] = {
     { "machine", "mem-merge", QEMU_CAPS_MEM_MERGE },
     { "machine", "vmport", QEMU_CAPS_MACHINE_VMPORT_OPT },
+    { "machine", "max-ram-below-4g", QEMU_CAPS_MACHINE_RAM_BELOW_4G },
     { "drive", "discard", QEMU_CAPS_DRIVE_DISCARD },
     { "drive", "detect-zeroes", QEMU_CAPS_DRIVE_DETECT_ZEROES },
     { "realtime", "mlock", QEMU_CAPS_MLOCK },

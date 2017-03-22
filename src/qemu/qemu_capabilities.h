@@ -379,6 +379,8 @@ typedef enum {
     QEMU_CAPS_DEVICE_IVSHMEM_PLAIN, /* -device ivshmem-plain */
     QEMU_CAPS_DEVICE_IVSHMEM_DOORBELL, /* -device ivshmem-doorbell */
 
+    QEMU_CAPS_MACHINE_RAM_BELOW_4G, /* -machine xxx,max-ram-below-4g=x */
+
     QEMU_CAPS_LAST /* this must always be the last item */
 } virQEMUCapsFlags;
 

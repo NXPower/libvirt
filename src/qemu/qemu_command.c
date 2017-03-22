@@ -7093,6 +7093,11 @@ qemuBuildMachineCommandLine(virCommandPtr cmd,
             virBufferAddLit(&buf, ",mem-merge=off");
         }
 
+        if (def->os.max_ram_below_4g) {
+            virBufferAsprintf(&buf, ",max-ram-below-4g=%llu",
+                                    def->os.max_ram_below_4g);
+        }
+
         if (def->keywrap &&
             !qemuAppendKeyWrapMachineParms(&buf, qemuCaps, def->keywrap))
             goto cleanup;

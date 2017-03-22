@@ -16127,6 +16127,19 @@ virDomainDefParseXML(xmlDocPtr xml,
     def->os.machine = virXPathString("string(./os/type[1]/@machine)", ctxt);
     def->emulator = virXPathString("string(./devices/emulator[1])", ctxt);
 
+    tmp = virXPathString("string(./os/type[1]/@max_ram_below_4g)", ctxt);
+    if (tmp) {
+        if (virStrToLong_ullp(tmp, NULL, 0, &def->os.max_ram_below_4g) < 0 ||
+            (def->os.max_ram_below_4g < 1) ||
+            (def->os.max_ram_below_4g) >= (4UL << 30)) {
+            virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                           _("invalid value for max_ram_below_4g, "
+                            "must be in range [1,4G]"));
+            goto error;
+        }
+    }
+    VIR_FREE(tmp);
+
     if (!(flags & VIR_DOMAIN_DEF_PARSE_SKIP_OSTYPE_CHECKS)) {
         /* If the logic here seems fairly arbitrary, that's because it is :)
          * This is duplicating how the code worked before
@@ -23491,6 +23504,8 @@ virDomainDefFormatInternal(virDomainDefPtr def,
         virBufferAsprintf(buf, " arch='%s'", virArchToString(def->os.arch));
     if (def->os.machine)
         virBufferAsprintf(buf, " machine='%s'", def->os.machine);
+    if (def->os.max_ram_below_4g)
+        virBufferAsprintf(buf, " max_ram_below_4g='%llu'", def->os.max_ram_below_4g);
     /*
      * HACK: For xen driver we previously used bogus 'linux' as the
      * os type for paravirt, whereas capabilities declare it to

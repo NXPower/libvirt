@@ -347,18 +347,20 @@
   </define>
   <define name="ostypehvm">
     <element name="type">
-      <optional>
-        <attribute name="arch">
-          <ref name="archnames"/>
-        </attribute>
-      </optional>
-      <optional>
-        <attribute name="machine">
-          <data type="string">
-            <param name="pattern">[a-zA-Z0-9_\.\-]+</param>
-          </data>
-        </attribute>
-      </optional>
+      <interleave>
+        <optional>
+          <attribute name="arch">
+            <ref name="archnames"/>
+          </attribute>
+        </optional>
+        <optional>
+          <attribute name="machine">
+            <data type="string">
+              <param name="pattern">[a-zA-Z0-9_\.\-]+</param>
+            </data>
+          </attribute>
+        </optional>
+      </interleave>
       <value>hvm</value>
     </element>
   </define>
