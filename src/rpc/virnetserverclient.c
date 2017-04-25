@@ -964,8 +964,11 @@ void virNetServerClientClose(virNetServerClientPtr client)
     virNetServerClientCloseFunc cf;
     virKeepAlivePtr ka;
 
+    VIR_WARN("Free'ing up resources of client=%p sock=%d",
+                       client, virNetServerClientGetFD(client));
+
     virObjectLock(client);
-    VIR_DEBUG("client=%p", client);
+
     if (!client->sock) {
         virObjectUnlock(client);
         return;
@@ -1036,6 +1039,8 @@ bool virNetServerClientIsClosed(virNetServerClientPtr client)
 
 void virNetServerClientDelayedClose(virNetServerClientPtr client)
 {
+    VIR_WARN("Client=%p sock=%d requested closure of connection",
+             client, virNetServerClientGetFD(client));
     virObjectLock(client);
     client->delayedClose = true;
     virObjectUnlock(client);
@@ -1043,6 +1048,8 @@ void virNetServerClientDelayedClose(virNetServerClientPtr client)
 
 void virNetServerClientImmediateClose(virNetServerClientPtr client)
 {
+    VIR_WARN("Client=%p sock=%d closed the connection",
+             client, virNetServerClientGetFD(client));
     virObjectLock(client);
     client->wantClose = true;
     virObjectUnlock(client);
@@ -1151,6 +1158,7 @@ static void virNetServerClientDispatchRead(virNetServerClientPtr client)
     if (client->rx->nfds == 0) {
         if (virNetServerClientRead(client) < 0) {
             client->wantClose = true;
+            VIR_WARN("Client=%p closed connection", client);
             return; /* Error */
         }
     }

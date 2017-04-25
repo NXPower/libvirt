@@ -328,8 +328,7 @@ virNodeSuspendSupportsTarget(unsigned int target, bool *supported)
 
     /* If still unavailable, then report error */
     if (ret == -2) {
-        virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
-                       _("Cannot probe for supported suspend types"));
+        VIR_INFO("Cannot probe for supported suspend types");
         ret = -1;
     }
 

@@ -367,8 +367,8 @@ qemuProcessFindDomainDiskByAlias(virDomainObjPtr vm,
     }
 
     virReportError(VIR_ERR_INTERNAL_ERROR,
-                   _("no disk found with alias %s"),
-                   alias);
+                   _("VM %s: no disk found with alias %s"),
+                   vm->def->name, alias);
     return NULL;
 }
 
@@ -937,6 +937,8 @@ qemuProcessHandleIOError(qemuMonitorPtr mon ATTRIBUTE_UNUSED,
         devAlias = "";
     }
 
+    VIR_INFO("VM %s: encountered IO error for disk %s srcPath %s [ action %d]",
+	      vm->def->name, diskAlias, srcPath, action);
     ioErrorEvent = virDomainEventIOErrorNewFromObj(vm, srcPath, devAlias, action);
     ioErrorEvent2 = virDomainEventIOErrorReasonNewFromObj(vm, srcPath, devAlias, action, reason);
 
@@ -986,7 +988,7 @@ qemuProcessHandleBlockJob(qemuMonitorPtr mon ATTRIBUTE_UNUSED,
 
     virObjectLock(vm);
 
-    VIR_DEBUG("Block job for device %s (domain: %p,%s) type %d status %d",
+    VIR_INFO("Block job for device %s (domain: %p,%s) type %d status %d",
               diskAlias, vm, vm->def->name, type, status);
 
     if (!(disk = qemuProcessFindDomainDiskByAlias(vm, diskAlias)))

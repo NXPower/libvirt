@@ -1875,9 +1875,7 @@ virNetDevGetLinkInfo(const char *ifname,
         goto cleanup;
 
     if (virFileReadAll(path, 1024, &buf) < 0) {
-        virReportSystemError(errno,
-                             _("unable to read: %s"),
-                             path);
+        VIR_DEBUG("unable to read: %s", path);
         goto cleanup;
     }
 

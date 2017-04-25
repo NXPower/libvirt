@@ -1357,7 +1357,7 @@ virFileReadAll(const char *path, int maxlen, char **buf)
 {
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
-        virReportSystemError(errno, _("Failed to open file '%s'"), path);
+        VIR_DEBUG("Failed to open file '%s'", path);
         return -1;
     }
 

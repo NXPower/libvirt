@@ -1092,7 +1092,7 @@ virCapsPtr virQEMUCapsInit(virQEMUCapsCachePtr cache)
 
     /* Add the power management features of the host */
     if (virNodeSuspendGetTargetMask(&caps->host.powerMgmt) < 0)
-        VIR_WARN("Failed to get host power management capabilities");
+        VIR_INFO("Failed to get host power management capabilities");
 
     /* Add huge pages info */
     if (virQEMUCapsInitPages(caps) < 0)

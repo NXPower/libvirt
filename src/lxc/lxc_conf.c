@@ -85,7 +85,7 @@ virCapsPtr virLXCDriverCapsInit(virLXCDriverPtr driver)
     /* Only probe for power management capabilities in the driver,
      * not in the emulator */
     if (driver && virNodeSuspendGetTargetMask(&caps->host.powerMgmt) < 0)
-        VIR_WARN("Failed to get host power management capabilities");
+        VIR_INFO("Failed to get host power management capabilities");
 
     if (virGetHostUUID(caps->host.host_uuid)) {
         virReportError(VIR_ERR_INTERNAL_ERROR,
