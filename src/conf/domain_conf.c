@@ -25541,11 +25541,10 @@ virDomainDefHasMemballoon(const virDomainDef *def)
 char *
 virDomainObjGetShortName(virDomainObjPtr vm)
 {
-    const int dommaxlen = 20;
+    char uuidstr[VIR_UUID_STRING_BUFLEN];
     char *ret = NULL;
 
-    ignore_value(virAsprintf(&ret, "%d-%.*s",
-                             vm->def->id, dommaxlen, vm->def->name));
+    ignore_value(VIR_STRDUP(ret, virUUIDFormat(vm->def->uuid, uuidstr)));
 
     return ret;
 }
