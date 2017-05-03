@@ -224,9 +224,10 @@
     <feature name='rtm'>
       <cpuid eax_in='0x07' ebx='0x00000800'/>
     </feature>
+    <!-- qemu-2.6.0-nutanix doesn't support cmt
     <feature name='cmt'>
       <cpuid eax_in='0x07' ebx='0x00001000'/>
-    </feature>
+    </feature> -->
     <feature name='mpx'>
       <cpuid eax_in='0x07' ebx='0x00004000'/>
     </feature>
@@ -270,12 +271,13 @@
     </feature>
 
     <!-- cpuid level 0x0000000f:1 (edx) -->
-    <feature name='mbm_total'> <!-- LLC Total MBM monitoring -->
+    <!-- qemu-2.6.0-nutanix doesn't support mbm_total nor mbm_local
+    <feature name='mbm_total'> <!-- LLC Total MBM monitoring
       <cpuid eax_in='0x0f' ecx_in='0x01' edx='0x00000002'/>
     </feature>
-    <feature name='mbm_local'> <!-- LLC Local MBM monitoring -->
+    <feature name='mbm_local'> <!-- LLC Local MBM monitoring
       <cpuid eax_in='0x0f' ecx_in='0x01' edx='0x00000004'/>
-    </feature>
+    </feature> -->
 
     <!-- extended features, EDX -->
     <feature name='syscall'> <!-- CPUID_EXT2_SYSCALL -->
