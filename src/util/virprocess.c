@@ -97,6 +97,30 @@ static inline int setns(int fd, int nstype)
 #   error Please determine the syscall number for setns on your architecture
 #  endif
 # endif
+
+# ifndef __NR_prlimit64
+#  if defined(__x86_64__)
+#   define __NR_prlimit64 302
+#  elif defined(__i386__)
+#   define __NR_prlimit64 340
+#  elif defined(__powerpc__)
+#   define __NR_prlimit64 325
+#  endif
+# endif
+
+# ifndef HAVE_PRLIMIT
+#  if defined(__NR_prlimit64)
+#   include <sys/syscall.h>
+static inline int prlimit(pid_t p, int resource,
+		   const struct rlimit *new_limit,
+		   struct rlimit *old_limit)
+{
+    return syscall(__NR_prlimit64, p, resource, new_limit, old_limit);
+}
+#  else /* !__NR_prlimit64 */
+#   error Please determine the syscall number for prlimit on your architecture
+#  endif
+# endif
 #else /* !__linux__ */
 static inline int setns(int fd ATTRIBUTE_UNUSED, int nstype ATTRIBUTE_UNUSED)
 {
@@ -715,7 +739,6 @@ int virProcessSetNamespaces(size_t nfdlist,
     return 0;
 }
 
-#if HAVE_PRLIMIT
 static int
 virProcessPrLimit(pid_t pid,
                   int resource,
@@ -724,17 +747,6 @@ virProcessPrLimit(pid_t pid,
 {
     return prlimit(pid, resource, new_limit, old_limit);
 }
-#elif HAVE_SETRLIMIT
-static int
-virProcessPrLimit(pid_t pid ATTRIBUTE_UNUSED,
-                  int resource ATTRIBUTE_UNUSED,
-                  const struct rlimit *new_limit ATTRIBUTE_UNUSED,
-                  struct rlimit *old_limit ATTRIBUTE_UNUSED)
-{
-    errno = ENOSYS;
-    return -1;
-}
-#endif
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_MEMLOCK)
 int
