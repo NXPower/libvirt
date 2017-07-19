@@ -5601,7 +5601,8 @@ qemuDomainGetMemLockLimitBytes(virDomainDefPtr def)
 
             if (dev->mode == VIR_DOMAIN_HOSTDEV_MODE_SUBSYS &&
                 dev->source.subsys.type == VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_PCI &&
-                dev->source.subsys.u.pci.backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO) {
+                (dev->source.subsys.u.pci.backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO ||
+                dev->source.subsys.u.pci.backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV)) {
                 usesVFIO = true;
                 break;
             }
@@ -5706,7 +5707,8 @@ qemuDomainRequiresMemLock(virDomainDefPtr def)
 
         if (dev->mode == VIR_DOMAIN_HOSTDEV_MODE_SUBSYS &&
             dev->source.subsys.type == VIR_DOMAIN_HOSTDEV_SUBSYS_TYPE_PCI &&
-            dev->source.subsys.u.pci.backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO)
+	    ( dev->source.subsys.u.pci.backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO ||
+             dev->source.subsys.u.pci.backend == VIR_DOMAIN_HOSTDEV_PCI_BACKEND_VFIO_MDEV))
             return true;
     }
 
