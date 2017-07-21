@@ -315,8 +315,21 @@ virHostdevNetDevice(virDomainHostdevDefPtr hostdev, char **linkdev,
                                          vf) < 0)
             goto cleanup;
     } else {
+        /* In practice this should never happen, since we currently
+         * only support assigning SRIOV VFs via <interface
+         * type='hostdev'>, and it is only those devices that should
+         * end up calling this function.
+         */
         if (virPCIGetNetName(sysfs_path, linkdev) < 0)
             goto cleanup;
+
+        if (!linkdev) {
+            virReportError(VIR_ERR_INTERNAL_ERROR,
+                           _("The device at %s has no network device name"),
+                             sysfs_path);
+            goto cleanup;
+        }
+
         *vf = -1;
     }
 
@@ -379,10 +392,65 @@ virHostdevNetConfigVirtPortProfile(const char *linkdev, int vf,
 }
 
 
+/**
+ * virHostdevSaveNetConfig:
+ * @hostdev: config object describing a hostdev device
+ * @stateDir: directory to save device state into
+ *
+ * If the given hostdev device is an SRIOV network VF and *does not*
+ * have a <virtualport> element (ie, it isn't being configured via
+ * 802.11Qbh), determine its PF+VF#, and use that to save its current
+ * "admin" MAC address and VF tag (the ones saved in the PF
+ * driver).
+ *
+ * Returns 0 on success, -1 on failure.
+ */
 static int
-virHostdevNetConfigReplace(virDomainHostdevDefPtr hostdev,
-                           const unsigned char *uuid,
-                           const char *stateDir)
+virHostdevSaveNetConfig(virDomainHostdevDefPtr hostdev,
+                        const char *stateDir)
+{
+    int ret = -1;
+    char *linkdev = NULL;
+    int vf = -1;
+
+    if (!virHostdevIsPCINetDevice(hostdev) ||
+        virDomainNetGetActualVirtPortProfile(hostdev->parent.data.net))
+       return 0;
+
+    if (virHostdevIsVirtualFunction(hostdev) != 1) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                       _("Interface type hostdev is currently supported on"
+                         " SR-IOV Virtual Functions only"));
+        goto cleanup;
+    }
+
+    if (virHostdevNetDevice(hostdev, &linkdev, &vf) < 0)
+        goto cleanup;
+
+    if (virNetDevSaveNetConfig(linkdev, vf, stateDir, true) < 0)
+        goto cleanup;
+
+    ret = 0;
+ cleanup:
+    VIR_FREE(linkdev);
+    return ret;
+}
+
+
+/**
+ * virHostdevSetNetConfig:
+ * @hostdev: config object describing a hostdev device
+ * @uuid: uuid of the domain
+ *
+ * If the given hostdev device is an SRIOV network VF, determine its
+ * PF+VF#, and use that to set the "admin" MAC address and VF tag (the
+ * ones saved in the PF driver).xs
+ *
+ * Returns 0 on success, -1 on failure.
+ */
+static int
+virHostdevSetNetConfig(virDomainHostdevDefPtr hostdev,
+                       const unsigned char *uuid)
 {
     char *linkdev = NULL;
     virNetDevVlanPtr vlan;
@@ -391,19 +459,14 @@ virHostdevNetConfigReplace(virDomainHostdevDefPtr hostdev,
     int vf = -1;
     bool port_profile_associate = true;
 
-    if (virHostdevIsVirtualFunction(hostdev) != 1) {
-        virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
-                       _("Interface type hostdev is currently supported on"
-                         " SR-IOV Virtual Functions only"));
-        return ret;
-    }
+    if (!virHostdevIsPCINetDevice(hostdev))
+        return 0;
 
     if (virHostdevNetDevice(hostdev, &linkdev, &vf) < 0)
-        return ret;
+        goto cleanup;
 
     vlan = virDomainNetGetActualVlan(hostdev->parent.data.net);
-    virtPort = virDomainNetGetActualVirtPortProfile(
-                                 hostdev->parent.data.net);
+    virtPort = virDomainNetGetActualVirtPortProfile(hostdev->parent.data.net);
     if (virtPort) {
         if (vlan) {
             virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
@@ -412,19 +475,24 @@ virHostdevNetConfigReplace(virDomainHostdevDefPtr hostdev,
                            virNetDevVPortTypeToString(virtPort->virtPortType));
             goto cleanup;
         }
-        ret = virHostdevNetConfigVirtPortProfile(linkdev, vf,
-                            virtPort, &hostdev->parent.data.net->mac, uuid,
-                            port_profile_associate);
+        if (virHostdevNetConfigVirtPortProfile(linkdev, vf, virtPort,
+                                               &hostdev->parent.data.net->mac,
+                                               uuid, port_profile_associate) < 0) {
+            goto cleanup;
+        }
     } else {
-        /* Set only mac and vlan */
-        ret = virNetDevReplaceNetConfig(linkdev, vf,
-                                        &hostdev->parent.data.net->mac,
-                                        vlan, stateDir);
+        if (virNetDevSetNetConfig(linkdev, vf, &hostdev->parent.data.net->mac,
+                                  vlan, NULL, true) < 0) {
+            goto cleanup;
+        }
     }
+
+    ret = 0;
  cleanup:
     VIR_FREE(linkdev);
     return ret;
 }
+
 
 /* @oldStateDir:
  * For upgrade purpose:
@@ -434,7 +502,7 @@ virHostdevNetConfigReplace(virDomainHostdevDefPtr hostdev,
  * case, try to find in the old state dir.
  */
 static int
-virHostdevNetConfigRestore(virDomainHostdevDefPtr hostdev,
+virHostdevRestoreNetConfig(virDomainHostdevDefPtr hostdev,
                            const char *stateDir,
                            const char *oldStateDir)
 {
@@ -468,9 +536,47 @@ virHostdevNetConfigRestore(virDomainHostdevDefPtr hostdev,
                                                  NULL,
                                                  port_profile_associate);
     } else {
-        ret = virNetDevRestoreNetConfig(linkdev, vf, stateDir);
-        if (ret < 0 && oldStateDir != NULL)
-            ret = virNetDevRestoreNetConfig(linkdev, vf, oldStateDir);
+        virMacAddrPtr MAC = NULL;
+        virMacAddrPtr adminMAC = NULL;
+        virNetDevVlanPtr vlan = NULL;
+
+        ret = virNetDevReadNetConfig(linkdev, vf, stateDir, &adminMAC, &vlan, &MAC);
+        if (ret < 0 && oldStateDir)
+            ret = virNetDevReadNetConfig(linkdev, vf, oldStateDir,
+                                         &adminMAC, &vlan, &MAC);
+
+        if (ret == 0) {
+            /* if a MAC was stored for the VF, we should now restore
+             * that as the adminMAC. We have to do it this way because
+             * the VF is still not bound to the host's net driver, so
+             * we can't directly set its MAC (and even after it is
+             * re-bound to the host net driver, it will still have its
+             * "administratively set" flag on, and that prohibits the
+             * VF's net driver from directly setting the MAC
+             * anyway). But it we set the desired VF MAC as the "admin
+             * MAC" *now*, then when the VF is re-bound to the host
+             * net driver (which will happen soon after returning from
+             * this function), that adminMAC will be set (by the PF)
+             * as the VF's new initial MAC.
+             *
+             * If no MAC was stored for the VF, that means it wasn't
+             * bound to a net driver before we used it anyway, so the
+             * adminMAC is all we have, and we can just restore it
+             * directly.
+             */
+            if (MAC) {
+                VIR_FREE(adminMAC);
+                adminMAC = MAC;
+                MAC = NULL;
+            }
+
+            ignore_value(virNetDevSetNetConfig(linkdev, vf,
+                                               adminMAC, vlan, MAC, true));
+        }
+
+        VIR_FREE(MAC);
+        VIR_FREE(adminMAC);
+        virNetDevVlanFree(vlan);
     }
 
     VIR_FREE(linkdev);
@@ -538,6 +644,14 @@ virHostdevPreparePCIDevices(virHostdevManagerPtr mgr,
         } else if (virHostdevIsPCINodeDeviceUsed(devAddr, &data)) {
             goto cleanup;
         }
+    }
+
+    /* Step 1.5: For non-802.11Qbh SRIOV network devices, save the
+     * current device config
+     */
+    for (i = 0; i < nhostdevs; i++) {
+        if (virHostdevSaveNetConfig(hostdevs[i], mgr->stateDir) < 0)
+            goto cleanup;
     }
 
     /* Step 2: detach managed devices and make sure unmanaged devices
@@ -627,16 +741,13 @@ virHostdevPreparePCIDevices(virHostdevManagerPtr mgr,
     }
 
     /* Step 4: For SRIOV network devices, Now that we have detached the
-     * the network device, set the netdev config */
+     * the network device, set the new netdev config */
     for (i = 0; i < nhostdevs; i++) {
-         virDomainHostdevDefPtr hostdev = hostdevs[i];
-         if (!virHostdevIsPCINetDevice(hostdev))
-             continue;
-         if (virHostdevNetConfigReplace(hostdev, uuid,
-                                        mgr->stateDir) < 0) {
-             goto resetvfnetconfig;
-         }
-         last_processed_hostdev_vf = i;
+
+        if (virHostdevSetNetConfig(hostdevs[i], uuid) < 0)
+            goto resetvfnetconfig;
+
+        last_processed_hostdev_vf = i;
     }
 
     /* Step 5: Move devices from the inactive list to the active list */
@@ -732,7 +843,7 @@ virHostdevPreparePCIDevices(virHostdevManagerPtr mgr,
  resetvfnetconfig:
     if (last_processed_hostdev_vf >= 0) {
         for (i = 0; i <= last_processed_hostdev_vf; i++)
-            virHostdevNetConfigRestore(hostdevs[i], mgr->stateDir, NULL);
+            virHostdevRestoreNetConfig(hostdevs[i], mgr->stateDir, NULL);
     }
 
  reattachdevs:
@@ -793,7 +904,7 @@ virHostdevReattachPCIDevice(virHostdevManagerPtr mgr,
 }
 
 /* @oldStateDir:
- * For upgrade purpose: see virHostdevNetConfigRestore
+ * For upgrade purpose: see virHostdevRestoreNetConfig
  */
 void
 virHostdevReAttachPCIDevices(virHostdevManagerPtr mgr,
@@ -894,7 +1005,7 @@ virHostdevReAttachPCIDevices(virHostdevManagerPtr mgr,
             if (actual) {
                 VIR_DEBUG("Restoring network configuration of PCI device %s",
                           virPCIDeviceGetName(actual));
-                virHostdevNetConfigRestore(hostdev, mgr->stateDir,
+                virHostdevRestoreNetConfig(hostdev, mgr->stateDir,
                                            oldStateDir);
             }
         }

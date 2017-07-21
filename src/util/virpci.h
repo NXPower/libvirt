@@ -186,6 +186,9 @@ int virPCIDeviceIsAssignable(virPCIDevicePtr dev,
                              int strict_acs_check);
 int virPCIDeviceWaitForCleanup(virPCIDevicePtr dev, const char *matcher);
 
+virPCIDeviceAddressPtr
+virPCIGetDeviceAddressFromSysfsLink(const char *device_link);
+
 int virPCIGetPhysicalFunction(const char *vf_sysfs_path,
                               virPCIDeviceAddressPtr *pf);
 
@@ -222,6 +225,7 @@ int virPCIGetVirtualFunctionInfo(const char *vf_sysfs_device_path,
                                  char **pfname, int *vf_index);
 
 int virPCIDeviceUnbind(virPCIDevicePtr dev);
+int virPCIDeviceRebind(virPCIDevicePtr dev);
 int virPCIDeviceGetDriverPathAndName(virPCIDevicePtr dev,
                                      char **path,
                                      char **name);

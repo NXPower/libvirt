@@ -6859,6 +6859,29 @@ qemuBuildCpuCommandLine(virCommandPtr cmd,
         have_cpu = true;
     }
 
+    if (def->cpu && def->cpu->cache) {
+        virCPUCacheDefPtr cache = def->cpu->cache;
+
+        if (!have_cpu) {
+            virBufferAdd(&buf, default_model, -1);
+            have_cpu = true;
+        }
+
+        switch (cache->mode) {
+        case VIR_CPU_CACHE_MODE_EMULATE:
+            virBufferAddLit(&buf, ",l3-cache=on");
+            break;
+
+        case VIR_CPU_CACHE_MODE_PASSTHROUGH:
+            virBufferAddLit(&buf, ",host-cache-info=on");
+            break;
+
+        case VIR_CPU_CACHE_MODE_DISABLE:
+        case VIR_CPU_CACHE_MODE_LAST:
+            break;
+        }
+    }
+
     if (virBufferCheckError(&buf) < 0)
         goto cleanup;
 

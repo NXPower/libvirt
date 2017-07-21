@@ -1956,7 +1956,7 @@ mymain(void)
     DO_TEST_FAILURE("aarch64-kvm-32-on-64",
             QEMU_CAPS_NODEFCONFIG, QEMU_CAPS_DEVICE_VIRTIO_MMIO,
             QEMU_CAPS_KVM);
-    driver.caps->host.cpu->arch = cpuDefault->arch;
+    driver.caps->host.cpu->arch = VIR_ARCH_X86_64;
 
     DO_TEST("kvm-pit-device", QEMU_CAPS_KVM_PIT_TICK_POLICY);
     DO_TEST("kvm-pit-delay", QEMU_CAPS_NO_KVM_PIT);
@@ -2117,6 +2117,15 @@ mymain(void)
 
     DO_TEST("cpu-hotplug-startup", QEMU_CAPS_QUERY_HOTPLUGGABLE_CPUS);
 
+    DO_TEST("cpu-cache-disable", QEMU_CAPS_KVM);
+    DO_TEST("cpu-cache-disable2", QEMU_CAPS_KVM);
+    DO_TEST("cpu-cache-disable3", QEMU_CAPS_KVM);
+    DO_TEST("cpu-cache-passthrough", QEMU_CAPS_KVM);
+    DO_TEST("cpu-cache-passthrough2", QEMU_CAPS_KVM);
+    DO_TEST("cpu-cache-emulate-l3", QEMU_CAPS_KVM);
+    DO_TEST_PARSE_ERROR("cpu-cache-emulate-l2", QEMU_CAPS_KVM);
+    DO_TEST_PARSE_ERROR("cpu-cache-passthrough3", QEMU_CAPS_KVM);
+    DO_TEST_PARSE_ERROR("cpu-cache-passthrough-l3", QEMU_CAPS_KVM);
     qemuTestDriverFree(&driver);
 
     return ret == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

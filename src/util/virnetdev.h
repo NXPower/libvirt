@@ -176,6 +176,9 @@ int virNetDevGetVirtualFunctionIndex(const char *pfname, const char *vfname,
 int virNetDevGetPhysicalFunction(const char *ifname, char **pfname)
     ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(2) ATTRIBUTE_RETURN_CHECK;
 
+int virNetDevPFGetVF(const char *pfname, int vf, char **vfname)
+    ATTRIBUTE_NONNULL(1) ATTRIBUTE_RETURN_CHECK;
+
 int virNetDevGetVirtualFunctions(const char *pfname,
                                  char ***vfname,
                                  virPCIDeviceAddressPtr **virt_fns,
@@ -184,14 +187,27 @@ int virNetDevGetVirtualFunctions(const char *pfname,
     ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(2) ATTRIBUTE_NONNULL(3)
     ATTRIBUTE_NONNULL(4) ATTRIBUTE_NONNULL(5) ATTRIBUTE_RETURN_CHECK;
 
-int virNetDevReplaceNetConfig(const char *linkdev, int vf,
-                              const virMacAddr *macaddress,
-                              virNetDevVlanPtr vlan,
-                              const char *stateDir)
-    ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(3) ATTRIBUTE_NONNULL(5);
+int virNetDevSaveNetConfig(const char *linkdev, int vf,
+                           const char *stateDir,
+                           bool saveVlan)
+    ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(3) ATTRIBUTE_RETURN_CHECK;
 
-int virNetDevRestoreNetConfig(const char *linkdev, int vf, const char *stateDir)
-    ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(3);
+int
+virNetDevReadNetConfig(const char *linkdev, int vf,
+                       const char *stateDir,
+                       virMacAddrPtr *adminMAC,
+                       virNetDevVlanPtr *vlan,
+                       virMacAddrPtr *MAC)
+   ATTRIBUTE_NONNULL(1) ATTRIBUTE_NONNULL(3) ATTRIBUTE_NONNULL(4)
+   ATTRIBUTE_NONNULL(5) ATTRIBUTE_NONNULL(6) ATTRIBUTE_RETURN_CHECK;
+
+int
+virNetDevSetNetConfig(const char *linkdev, int vf,
+                      const virMacAddr *adminMAC,
+                      virNetDevVlanPtr vlan,
+                      const virMacAddr *MAC,
+                      bool setVLan)
+    ATTRIBUTE_NONNULL(1) ATTRIBUTE_RETURN_CHECK;
 
 int virNetDevGetVirtualFunctionInfo(const char *vfname, char **pfname,
                                     int *vf)
