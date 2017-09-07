@@ -5449,9 +5449,29 @@ qemuProcessLaunch(virConnectPtr conn,
         qemuProcessAutoDestroyAdd(driver, vm, conn) < 0)
         goto cleanup;
 
+
+
+    /* Now that we know the QEMU process has been executed and the vcpus are about to start,
+     * lets call the hook. */
+    if (virHookPresent(VIR_HOOK_DRIVER_QEMU)) {
+        char *xml = qemuDomainDefFormatXML(driver, vm->def, 0);
+        int hookret;
+
+        hookret = virHookCall(VIR_HOOK_DRIVER_QEMU, vm->def->name,
+                              VIR_HOOK_QEMU_OP_STARTCPUS, VIR_HOOK_SUBOP_BEGIN,
+                              NULL, xml, NULL);
+        VIR_FREE(xml);
+
+        /**
+         * If the script raised an error abort the launch
+         **/
+        if (hookret < 0)
+            goto cleanup;
+    }
+
     ret = 0;
 
- cleanup:
+cleanup:
     qemuDomainSecretDestroy(vm);
     virCommandFree(cmd);
     qemuDomainLogContextFree(logCtxt);

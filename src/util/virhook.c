@@ -71,6 +71,7 @@ VIR_ENUM_IMPL(virHookSubop, VIR_HOOK_SUBOP_LAST,
 
 VIR_ENUM_IMPL(virHookQemuOp, VIR_HOOK_QEMU_OP_LAST,
               "start",
+              "startcpus",
               "stopped",
               "prepare",
               "release",
