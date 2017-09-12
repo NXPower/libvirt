@@ -22,6 +22,7 @@
  */
 
 #include <config.h>
+#include <time.h>
 
 #include "virpci.h"
 
@@ -244,6 +245,94 @@ virPCIFile(const char *device, const char *file)
     return buffer;
 }
 
+/* Helper functions to grab nvidia unbindLock. */
+
+static unsigned long long
+timediff_us(struct timespec *end, struct timespec *start)
+{
+    return (end->tv_sec  - start->tv_sec ) * 1000000 +
+           (end->tv_nsec - start->tv_nsec) / 1000;
+}
+
+/* Grab the nvidia unbindLock. Return true if locked, false on error. */
+static bool
+virNvidiaUnbindLock(const char* device)
+{
+    bool locked = false;
+    char *lock_path = NULL;
+    char *lock_value = NULL;
+    static unsigned long long timeout = 2 * 1000000; /* 2s in us */
+    int retries = 0;
+    struct timespec start;
+    struct timespec end;
+    unsigned long long duration;
+
+    /* Device identifier is mandatory to unbind an nvidia device. */
+    if (!device) {
+        virReportError(VIR_ERR_INTERNAL_ERROR,
+                       _("Cannot unbind NULL device"));
+        return false;
+    }
+
+    /* Path to lock file in nvidia proc interface. */
+    if (virAsprintf(&lock_path, "/proc/driver/nvidia/gpus/%s/unbindLock",
+                    device) < 0) {
+        virReportSystemError(errno,
+                             _("Failed to allocate buffer for '%s'"), device);
+        return false;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    while (true) {
+
+        /* Set unbindLock to "1\n". */
+        if (virFileWriteStr(lock_path, "1\n", 0) < 0) {
+            virReportSystemError(errno,
+                                 _("Failed to write to unbindLock for '%s'"),
+                                 device);
+            goto out;
+        }
+
+        /* The value will only be "1" or "0" with a newline, so read 2 bytes. */
+        if (virFileReadAll(lock_path, 2, &lock_value) < 0) {
+            virReportSystemError(errno,
+                                 _("Failed to read from unbindLock for '%s'"),
+                                 device);
+            goto out;
+        }
+
+        /* Test if unbindLock is "1\n" and thus locked. */
+        if (strcmp(lock_value, "1\n") == 0) {
+            locked = true;
+        } else {
+            retries++;
+        }
+
+        VIR_FREE(lock_value);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        duration = timediff_us(&end, &start);
+
+        /* Lock succeeded. */
+        if (locked) {
+            if (retries > 0)
+                VIR_DEBUG("unbindLock for '%s' %d retries %llu us", device,
+                          retries, duration);
+            goto out;
+        }
+
+        /* Check for timeout. */
+        if (duration >= timeout) {
+            virReportError(VIR_ERR_INTERNAL_ERROR,
+                           _("unbindLock timeout for '%s' %d retries %llu us"),
+                           device, retries, duration);
+            goto out;
+        }
+    }
+
+ out:
+    VIR_FREE(lock_path);
+    return locked;
+}
 
 /* virPCIDeviceGetDriverPathAndName - put the path to the driver
  * directory of the driver in use for this device in @path and the
@@ -1073,6 +1162,17 @@ virPCIDeviceUnbind(virPCIDevicePtr dev)
         goto cleanup;
 
     if (virFileExists(path)) {
+
+        /*
+         * Special case for Nvidia drivers. Grab the unbindLock to guarantee
+         * unbind doesn't conflict with nvidia-smi.
+         */
+        if (strcmp(driver, "nvidia") == 0) {
+            if (!virNvidiaUnbindLock(dev->name)) {
+                /* Lock errors already reported. */
+                goto cleanup;
+            }
+        }
         if (virFileWriteStr(path, dev->name, 0) < 0) {
             virReportSystemError(errno,
                                  _("Failed to unbind PCI device '%s' from %s"),
